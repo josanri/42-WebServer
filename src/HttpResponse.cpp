@@ -1,7 +1,17 @@
-#include <map>
 #include "HttpResponse.hpp"
+#include <map>
+#include <iostream>
 
-HttpResponse ()
+static const struct tm * getTimePointer()
 {
-	this->headers["date"] = asctime(getTimePointer());
+	time_t rawtime;
+	struct tm * timeinfo;
+
+	time ( &rawtime );
+	return localtime ( &rawtime );
+}
+
+HttpResponse::HttpResponse()
+{
+	this->headers["date"] = std::string(asctime(getTimePointer()));
 }

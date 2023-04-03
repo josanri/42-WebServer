@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include "HttpServer.hpp"
 int server_daemon();
 
 void fake_read_configuration_file(char const *conf_file)
@@ -14,6 +14,7 @@ int main(int argc, char const **argv)
 		return (1);
 	}
 	fake_read_configuration_file(argv[1]);
-	server_daemon();
+	HttpServer server;
+	(void) server;
 	return 0;
 }
