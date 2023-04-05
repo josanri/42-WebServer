@@ -21,6 +21,10 @@ class HttpServer
 		HttpServer(const HttpServerConfiguration &);
 		~HttpServer(void);
 		HttpServer & operator=(const HttpServer &);
+
+		int getServerFd() const;
+		void announce(std::ostream&) const;
 };
 
+std::ostream& operator<<(std::ostream &out, HttpServer const & rhs);
 #endif

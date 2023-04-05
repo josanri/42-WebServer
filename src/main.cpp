@@ -1,14 +1,14 @@
 #include <iostream>
-#include <list>
+#include <vector>
 #include <map>
 #include <set>
 #include <fstream>
 #include "HttpServer.hpp"
 #include "HttpServerConfiguration.hpp"
 
-std::list<HttpServerConfiguration> read_configuration_file(const char *configuration_filename)
+std::vector<HttpServerConfiguration> parseConfigurationFile(const char *configuration_filename)
 {
-	std::list<HttpServerConfiguration> config;
+	std::vector<HttpServerConfiguration> config;
 	std::ifstream file(configuration_filename);
 	
 	// Do stuff
@@ -17,14 +17,14 @@ std::list<HttpServerConfiguration> read_configuration_file(const char *configura
 	return (config);
 }
 
-std::list<HttpServer> initializeServers(std::list<HttpServerConfiguration> & list)
+std::vector<HttpServer> initializeServers(std::vector<HttpServerConfiguration> & vector)
 {
-	std::list<HttpServer> serverList;
-	for (std::list<HttpServerConfiguration>::iterator it; it != list.end(); it++) {
+	std::vector<HttpServer> serverVector;
+	for (std::vector<HttpServerConfiguration>::iterator it; it != vector.end(); it++) {
 		HttpServer newServer(*it);
-		serverList.push_back(newServer);
+		serverVector.push_back(newServer);
 	}
-	return (serverList);
+	return (serverVector);
 }
 
 int main(int argc, char **argv)
@@ -33,16 +33,18 @@ int main(int argc, char **argv)
 		std::cerr << "usage: ./webserv configuration_file" << std::endl;
 		return (1);
 	}
-	std::list<HttpServerConfiguration> server_configuration_list = read_configuration_file(argv[1]);
+	std::vector<HttpServerConfiguration> serverConfigurationVector = parseConfigurationFile(argv[1]);
+	std::vector<HttpServer> serverVector = initializeServers(serverConfigurationVector);
 	std::map<HttpServer, std::set<int> &> serverToOpenFileDescriptors;
 	(void) serverToOpenFileDescriptors;
+	// serverToOpenFileDescriptors[serverVector[0]] = serverVector[0].getOpenFileDescriptors();
 	while (true) {
 		// On each iteration
 
 		// Get all file descriptors into an struct array
 
 		// Use poll
-
+		
 		// Do the operations depending on the server they came from
 	}
 	
