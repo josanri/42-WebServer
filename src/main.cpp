@@ -1,20 +1,50 @@
 #include <iostream>
+#include <list>
+#include <map>
+#include <set>
+#include <fstream>
 #include "HttpServer.hpp"
-int server_daemon();
+#include "HttpServerConfiguration.hpp"
 
-void fake_read_configuration_file(char const *conf_file)
+std::list<HttpServerConfiguration> read_configuration_file(const char *configuration_filename)
 {
-	(void) conf_file;
+	std::list<HttpServerConfiguration> config;
+	std::ifstream file(configuration_filename);
+	
+	// Do stuff
+
+	// File is closed as RAII pattern is implemented in ifstream
+	return (config);
 }
 
-int main(int argc, char const **argv)
+std::list<HttpServer> initializeServers(std::list<HttpServerConfiguration> & list)
+{
+	std::list<HttpServer> serverList;
+	for (std::list<HttpServerConfiguration>::iterator it; it != list.end(); it++) {
+		HttpServer newServer(*it);
+		serverList.push_back(newServer);
+	}
+	return (serverList);
+}
+
+int main(int argc, char **argv)
 {
 	if (argc != 2) {
 		std::cerr << "usage: ./webserv configuration_file" << std::endl;
 		return (1);
 	}
-	fake_read_configuration_file(argv[1]);
-	HttpServer server;
-	(void) server;
+	std::list<HttpServerConfiguration> server_configuration_list = read_configuration_file(argv[1]);
+	std::map<HttpServer, std::set<int> &> serverToOpenFileDescriptors;
+	(void) serverToOpenFileDescriptors;
+	while (true) {
+		// On each iteration
+
+		// Get all file descriptors into an struct array
+
+		// Use poll
+
+		// Do the operations depending on the server they came from
+	}
+	
 	return 0;
 }

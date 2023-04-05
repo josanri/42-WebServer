@@ -1,18 +1,24 @@
 #ifndef HTTP_SERVER_HPP
 #define HTTP_SERVER_HPP
-#include <netinet/in.h>
+# include <netinet/in.h>
+# include "HttpServerConfiguration.hpp"
+# include <set>
 
 class HttpServer
 {
 	private:
 		int server_fd;
-		int number_of_conections;
-		int port;
 		struct sockaddr_in address;
-		int prepare_server_connection();
+		HttpServerConfiguration configuration;
+		std::set<int> openFileDescriptors;
+		void initializeSocket();
+		int prepareServerConnection();
 	public:
+		std::set<int> & getOpenFileDescriptors(void);
+
 		HttpServer(void);
 		HttpServer(const HttpServer &);
+		HttpServer(const HttpServerConfiguration &);
 		~HttpServer(void);
 		HttpServer & operator=(const HttpServer &);
 };
