@@ -5,6 +5,9 @@
 class HttpRequest
 {
 	private:
+        std::string method;
+        std::string route;
+        std::string protocol;
 		std::map<std::string, std::string> headers;
 	public:
 		HttpRequest();
@@ -13,4 +16,15 @@ class HttpRequest
 		~HttpRequest();
 };
 
+/*
+Example:
+
+GET /hello.htm HTTP/1.1
+User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)
+Host: www.google.com
+Accept-Language: en-us
+Accept-Encoding: gzip, deflate
+Connection: Keep-Alive
+
+*/
 #endif

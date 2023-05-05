@@ -1,5 +1,5 @@
 NAME = webserv
-SRC = $(addprefix src/,main.cpp HttpServer.cpp HttpServerConfiguration.cpp)
+SRC = $(addprefix src/,main.cpp HttpServer.cpp HttpServerConfiguration.cpp HttpPortListener.cpp)
 OBJ = ${SRC:.cpp=.o}
 
 CXX			=	c++
