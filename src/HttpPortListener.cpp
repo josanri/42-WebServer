@@ -44,6 +44,35 @@ int HttpPortListener::prepareServerConnection() {
 	return (0);
 }
 
+void HttpPortListener::connect(const int & fd, const int & revents) {
+    socklen_t address_len = sizeof(this->address);
+    int new_socket_fd;
+
+	printf("\tfd=%d; events: %s%s%s%s\n", fd,
+						(revents & POLLIN)  ? "POLLIN "  : "",
+						(revents & POLLHUP) ? "POLLHUP " : "",
+						(revents & POLLERR) ? "POLLERR " : "",
+						(revents & POLLOUT) ? "POLLOUT " : "");
+	if (fd == this->server_fd) {
+		if (revents & POLLIN){
+			new_socket_fd = accept(fd, (struct sockaddr *) &address, &address_len);
+			if (new_socket_fd != -1) {
+				fcntl(this->server_fd, F_SETFL, O_NONBLOCK);
+				this->openFileDescriptors.insert(new_socket_fd);
+			}
+		}
+	}
+	else
+	{
+		char read_buffer[8192];
+		if (revents & POLLIN){
+			int len = recv(fd, read_buffer, 8192, 0);
+			write(0, read_buffer, len);
+		}
+	}
+    // Accept connection if none is present, 
+}
+
 void HttpPortListener::initializeSocket(){
 	this->server_fd = socket(AF_INET, SOCK_STREAM, 0); // Endpoint
 	if (this->server_fd == -1) {

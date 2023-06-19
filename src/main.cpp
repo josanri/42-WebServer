@@ -29,7 +29,7 @@
 // 	return (serverVector);
 // }
 
-void fakePortListeners(std::vector<HttpPortListener *> & vector)
+void fake_portListeners(std::vector<HttpPortListener *> & vector)
 {
 	HttpPortListener *listener = new HttpPortListener();
 	listener->initializeSocket();
@@ -60,15 +60,21 @@ void fillPollingStructure(struct pollfd* polling_fds, std::vector<HttpPortListen
 	}
 }
 
+
+int fake_parse(char *filename){
+	(void) filename;
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	std::vector<HttpPortListener *> serverVector;
-	(void) argv;
-	fakePortListeners(serverVector);
 	if (argc != 2) {
 		std::cerr << "usage: ./webserv configuration_file" << std::endl;
 		return (1);
 	}
+	fake_parse(argv[1]);
+	fake_portListeners(serverVector);
 	// std::vector<HttpServerConfiguration> serverConfigurationVector = parseConfigurationFile(argv[1]);
 	// std::vector<HttpPortListener> serverVector = initializeServers(serverConfigurationVector);
 	// (void) serverVector;
@@ -78,14 +84,18 @@ int main(int argc, char **argv)
 		// Use poll
 		struct pollfd* polling_fds = new struct pollfd[open_fds_n];
 		fillPollingStructure(polling_fds, serverVector);
-		int err = poll(polling_fds, open_fds_n, 0);
+		int err = poll(polling_fds, open_fds_n, -1);
 		if (err == 0)
-			std::cout << "Time limit" << std::endl;
+			std::cout << "Poll time out" << std::endl;
 		else if (err < 0)
 			std::cout << "I/O error" << std::endl;
-		// Get all file descriptors into an struct array
-
-		
+		else {
+			// Get all file descriptors into an struct array
+			std::cout << "Petición recibida" << std::endl;
+			for (nfds_t i = 0; i < open_fds_n; i++){
+				serverVector[i]->connect(polling_fds[i].fd,  polling_fds[i].revents);
+			}
+		}
 		// Do the operations depending on the server they came from
 		delete [] polling_fds;
 	}

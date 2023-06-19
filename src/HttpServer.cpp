@@ -39,18 +39,6 @@
 // }
 
 
-// /*
-// socklen_t address_len = sizeof(this->address);
-// int new_socket_fd = -;
-// new_socket_fd = accept(server_fd, (struct sockaddr *) &address, &address_len);
-// if (new_socket_fd != -1) {
-// 	fcntl(this->server_fd, F_SETFL, O_NONBLOCK);
-// }
-// // Accept connection if none is present, 
-// std::cout << new_socket_fd << std::endl;
-// */
-
-
 
 // HttpServer::~HttpServer(void) {
 // 	close(server_fd); // Execution should not end but closing server would be the way to do it

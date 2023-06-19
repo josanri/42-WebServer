@@ -20,6 +20,7 @@ class HttpPortListener
 		~HttpPortListener(void);
 		HttpPortListener & operator=(const HttpPortListener &);
 		void initializeSocket();
+		void connect(const int & fd, const int & revents);
 
 		std::set<int> & getOpenFileDescriptors(void);
 		int getServerFd() const;
