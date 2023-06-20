@@ -1,42 +1,27 @@
+#include <poll.h>
+
 #include <iostream>
 #include <vector>
 #include <map>
 #include <set>
 #include <fstream>
 #include <cstdlib>
+
 #include "HttpServer.hpp"
 #include "HttpServerConfiguration.hpp"
 #include "HttpPortListener.hpp"
-#include <poll.h>
 
-// std::vector<HttpServerConfiguration> parseConfigurationFile(const char *configuration_filename)
-// {
-// 	std::vector<HttpServerConfiguration> config;
-// 	std::ifstream file(configuration_filename);
-	
-// 	// Do stuff
-
-// 	// File is closed as RAII pattern is implemented in ifstream
-// 	return (config);
-// }
-
-// std::vector<HttpPortListener> initializeServers(std::vector<HttpServerConfiguration> & vector)
-// {
-// 	std::vector<HttpPortListener> serverVector;
-// 	for (std::vector<HttpServerConfiguration>::iterator it = vector.begin(); it != vector.end(); it++) {
-// 		//serverVector.push_back(newServer);
-// 	}
-// 	return (serverVector);
-// }
-
-void fake_portListeners(std::vector<HttpPortListener *> & vector)
-{
-	HttpPortListener *listener = new HttpPortListener();
-	listener->initializeSocket();
-	vector.push_back(listener);
-
+int fake_parse(char *filename){
+	(void) filename;
+	return 0;
 }
 
+void fake_portListeners(std::vector<HttpPortListener *> & vector, std::map<int,HttpPortListener *> & fileDescriptoToPort)
+{
+	HttpPortListener *listener = new HttpPortListener(fileDescriptoToPort);
+	listener->initializeSocket();
+	vector.push_back(listener);
+}
 
 int getNumberOfFds(std::vector<HttpPortListener *> vector) {
 	int acc_size = 0;
@@ -47,8 +32,9 @@ int getNumberOfFds(std::vector<HttpPortListener *> vector) {
 	return (acc_size);
 }
 
-void fillPollingStructure(struct pollfd* polling_fds, std::vector<HttpPortListener *> &serverVector){
+struct pollfd* createPollStruct(nfds_t open_fds, std::vector<HttpPortListener *> &serverVector){
 	int counter = 0;
+	struct pollfd* polling_fds = new struct pollfd[open_fds];
 	for (std::vector<HttpPortListener *>::iterator it = serverVector.begin(); it !=  serverVector.end(); it++)
 	{
 		std::set<int> & openFileDescriptors = (*it)->getOpenFileDescriptors();
@@ -56,49 +42,40 @@ void fillPollingStructure(struct pollfd* polling_fds, std::vector<HttpPortListen
 		{
 			polling_fds[counter].events = POLL_IN | POLL_OUT;
 			polling_fds[counter].fd = *fd_it;
+			counter++;
 		}
 	}
-}
-
-
-int fake_parse(char *filename){
-	(void) filename;
-	return 0;
+	return (polling_fds);
 }
 
 int main(int argc, char **argv)
 {
 	std::vector<HttpPortListener *> serverVector;
+	std::map<int,HttpPortListener *> fileDescriptoToPort;
+	std::set<int> localFiles;
 	if (argc != 2) {
 		std::cerr << "usage: ./webserv configuration_file" << std::endl;
 		return (1);
 	}
 	fake_parse(argv[1]);
-	fake_portListeners(serverVector);
-	// std::vector<HttpServerConfiguration> serverConfigurationVector = parseConfigurationFile(argv[1]);
-	// std::vector<HttpPortListener> serverVector = initializeServers(serverConfigurationVector);
-	// (void) serverVector;
-	// serverToOpenFileDescriptors[serverVector[0]] = serverVector[0].getOpenFileDescriptors();
+	fake_portListeners(serverVector, fileDescriptoToPort);
 	while (true) {
 		nfds_t open_fds_n = getNumberOfFds(serverVector);
-		// Use poll
-		struct pollfd* polling_fds = new struct pollfd[open_fds_n];
-		fillPollingStructure(polling_fds, serverVector);
-		int err = poll(polling_fds, open_fds_n, -1);
+		struct pollfd* polling_fds = createPollStruct(open_fds_n, serverVector);
+
+		std::cout << "Number of file descriptors open 	" << open_fds_n << std::endl;
+		int err = poll(polling_fds, open_fds_n, 500);
 		if (err == 0)
-			std::cout << "Poll time out" << std::endl;
+			std::cout << "\tPoll time out" << std::endl;
 		else if (err < 0)
-			std::cout << "I/O error" << std::endl;
+			std::cout << "\tI/O error" << std::endl;
 		else {
-			// Get all file descriptors into an struct array
-			std::cout << "Petición recibida" << std::endl;
-			for (nfds_t i = 0; i < open_fds_n; i++){
-				serverVector[i]->connect(polling_fds[i].fd,  polling_fds[i].revents);
+			for (nfds_t i = 0; i < open_fds_n; i++) {
+				HttpPortListener * httpPortListener = fileDescriptoToPort.at(polling_fds[i].fd);
+				httpPortListener->connect(polling_fds[i].fd,  polling_fds[i].revents);
 			}
 		}
-		// Do the operations depending on the server they came from
 		delete [] polling_fds;
 	}
-	
-	return 0;
+	return (0);
 }

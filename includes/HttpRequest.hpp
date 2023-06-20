@@ -7,7 +7,7 @@ class HttpRequest
 	private:
         std::string method;
         std::string route;
-        std::string protocol;
+        std::string host;
 		std::map<std::string, std::string> headers;
 	public:
 		HttpRequest();

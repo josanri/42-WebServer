@@ -3,7 +3,11 @@
 # include <netinet/in.h>
 # include "HttpServerConfiguration.hpp"
 # include <set>
+# include <map>
 # include <vector>
+
+#define BUFFER_SIZE 8192
+#define LISTEN_BACKLOG 20
 
 class HttpPortListener
 {
@@ -12,9 +16,12 @@ class HttpPortListener
         int port;
 		struct sockaddr_in address;
 		std::set<int> openFileDescriptors;
-		int prepareServerConnection();
+		std::map<int, HttpPortListener*> & fileDescriptorToPort;
+		int bindServerConnection();
+		void addConnection(int fd);
+		void closeConnection(int fd);
 	public:
-		HttpPortListener(void);
+		HttpPortListener(std::map<int, HttpPortListener*> &);
 		HttpPortListener(const HttpPortListener &);
 		HttpPortListener(const HttpServerConfiguration &);
 		~HttpPortListener(void);
