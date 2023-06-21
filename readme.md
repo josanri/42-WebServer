@@ -9,6 +9,7 @@ Methods implemented **GET**, **POST**, and **DELETE**.
 - Headers implemented
 - Referer
 - Retry-After
+- User-Agent (Request)
 - WWW-Authenticate
 ### Accept-Language
 Return the languages that offers, by default en-US
@@ -68,11 +69,6 @@ Server: Webserv/1.0 (MacOS)
 - chunked
 
 Data is sent in a series of chunks. The Content-Length header is omitted in this case and at the beginning of each chunk you need to add the length of the current chunk in hexadecimal format, followed by '\r\n' and then the chunk itself, followed by another '\r\n'.
-### User-Agent
-On request
-```
-User-Agent: <product> / <product-version> <comment> Copy to Clipboard
-```
 ## How requests work
 ```
 Method Route Protocol
