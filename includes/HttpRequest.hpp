@@ -1,5 +1,6 @@
 #ifndef HTTP_REQUEST_HPP
 # define HTTP_REQUEST_HPP
+# include <iostream>
 # include <map>
 
 class HttpRequest
@@ -9,11 +10,16 @@ class HttpRequest
         std::string route;
         std::string host;
 		std::map<std::string, std::string> headers;
+		std::string body;
+		std::string full_request;
+		bool isFinished;
 	public:
 		HttpRequest();
 		HttpRequest(const HttpRequest &);
 		HttpRequest & operator=(const HttpRequest &);
 		~HttpRequest();
+		void append(std::string & str);
+		const std::string & getHost() const;
 };
 
 /*

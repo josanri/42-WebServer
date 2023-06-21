@@ -1,5 +1,5 @@
-#ifndef ERROR_CODE_HPP
-# define ERROR_CODE_HPP
+#ifndef HTTP_ERROR_CODE_HPP
+# define HTTP_ERROR_CODE_HPP
 
 /**
  * @brief 100 - Informative responses

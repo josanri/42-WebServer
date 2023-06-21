@@ -3,13 +3,37 @@
 #include <cstring>
 #include <cerrno>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <iostream>
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
 #include <map>
+#include <algorithm>
 #include "HttpPortListener.hpp"
+#include "HttpResponse.hpp"
+#include "HttpRequest.hpp"
+
+#define BUFFER_SIZE 8192
+#define LISTEN_BACKLOG 20
+
+// Debug
+void replaceAll(std::string & str, std::string const & s1, std::string const & s2)
+{
+    size_t pos = 0;
+    while ((pos = str.find(s1, pos)) != std::string::npos)
+    {
+        str.erase(pos, s1.length());
+        str.insert(pos, s2);
+        pos += s2.length();
+    }
+}
+
+void HttpPortListener::processRequest(HttpRequest & httpRequest)
+{
+	(void) httpRequest;
+}
 
 void HttpPortListener::addConnection(int fd)
 {
@@ -24,7 +48,6 @@ void HttpPortListener::closeConnection(int fd)
 	this->fileDescriptorToPort.erase(fd);
 	this->openFileDescriptors.erase(fd);
 }
-
 
 static int configSocketOptions(int server_fd) {
 	int opt = 1;
@@ -52,8 +75,7 @@ int HttpPortListener::bindServerConnection() {
 		std::cerr << __func__ << ":" << __LINE__ << ": error when binding the socket" << std::endl;
 		return (EXIT_FAILURE);
 	}
-	// this->configuration.getNumberOfConections()
-	if (listen(this->server_fd, 5)) {// Socket to local address
+	if (listen(this->server_fd, LISTEN_BACKLOG)) {// Socket to passive mode
 		std::cerr << __func__ << ":" << __LINE__ << ": error when turning socket into passive socket" << std::endl;
 		return (EXIT_FAILURE);
 	}
@@ -69,12 +91,20 @@ static int setTimeout(int fd){
 		std::cerr << __func__ << ":" << __LINE__ << ": error when setting socket receive timeout" << std::endl;
 		return (EXIT_FAILURE);
 	}
-
 	if (setsockopt (fd, SOL_SOCKET, SO_SNDTIMEO, &timeout,	sizeof(timeout)) < 0) {
 		std::cerr << __func__ << ":" << __LINE__ << ": error when setting socket send timeout" << std::endl;
 		return (EXIT_FAILURE);
 	}
-	return (0);
+	return (EXIT_SUCCESS);
+}
+
+static int setKeepAlive(int fd){
+	int yes = 1;
+	if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(int)) < 0) {
+		std::cerr << __func__ << ":" << __LINE__ << ": error when setting socket to keepalive mode" << std::endl;
+		return (EXIT_FAILURE);
+	}
+	return (EXIT_SUCCESS);
 }
 
 void HttpPortListener::connect(const int & fd, const int & revents) {
@@ -89,50 +119,72 @@ void HttpPortListener::connect(const int & fd, const int & revents) {
 	if (fd == this->server_fd) {
 		if (revents & POLLIN) {
 			new_socket_fd = accept(fd, (struct sockaddr *) &address, &address_len);
-			if (new_socket_fd != -1) {
-				fcntl(new_socket_fd, F_SETFL, O_NONBLOCK);
-				setTimeout(fd);
-				int yes = 1;
-				setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(int));// Keep alive True
-				std::cout << "New file_descriptor " << new_socket_fd << std::endl;
-				this->addConnection(new_socket_fd);
-			} else {
+			if (new_socket_fd == -1) {
 				std::cerr << "Error when trying to accept a connection " << std::endl;
-				this->closeConnection(fd);
-			}
-		}
-	}
-	else
-	{
-		char read_buffer[BUFFER_SIZE];
-		if (revents & POLLHUP || revents & POLL_ERR) {
-			this->closeConnection(fd);
-			return;
-		}
-		if (revents & POLLIN) {
-			int len = recv(fd, read_buffer, BUFFER_SIZE, 0);
-			if (len < 0) {
-				std::cout << "There was an error reading from a socket, closing connection" << std::endl;
-				this->closeConnection(fd);
-			} else if (len == 0) {
-				// User closed connection
-				this->closeConnection(fd);
+				close(fd);
 			} else {
-				// Receive connection
-				std::string request = read_buffer;
-				std::cout << request << std::endl;
+				if (fcntl(new_socket_fd, F_SETFL, O_NONBLOCK) == -1 || setTimeout(fd) != 0 || setKeepAlive(fd) != 0) {
+					close(fd);
+				} else {
+					std::cout << "New file_descriptor " << new_socket_fd << std::endl;
+					this->addConnection(new_socket_fd);
+				}
 			}
 		}
-		if (revents & POLLOUT) {
+	} else {
+		if (revents & POLLHUP || revents & POLLERR) {
+			this->closeConnection(fd);
+		} else {
+			if (revents & POLLIN) {
+				char read_buffer[BUFFER_SIZE];
+				int len = recv(fd, read_buffer, BUFFER_SIZE, 0);
+				if (len < 0) {
+					std::cout << "There was an error reading from a socket, closing connection" << std::endl;
+					this->closeConnection(fd);
+				} else if (len == 0) {
+					// User closed connection
+					this->closeConnection(fd);
+				} else {
+					// Receive connection
+					read_buffer[len] = 0;
+					std::string request = read_buffer;
+					if (this->fileDescriptorToRequest.find(fd) != this->fileDescriptorToRequest.end()) {
+						HttpRequest & inProcessRequest = this->fileDescriptorToRequest.at(fd);
+						inProcessRequest.append(request);
+					}
+					replaceAll(request, "\r\n", "\\r\\n\n");
+					std::cout << request  << std::endl;
+				}
+			} else if (revents & POLLOUT) {
+				if (this->fileDescriptorToRequest.find(fd) != this->fileDescriptorToRequest.end()) {
+					HttpRequest & readyRequest = this->fileDescriptorToRequest.at(fd);
+					const std::string & serverHost = readyRequest.getHost();
+					HttpServer httpServer;
+					if (this->serverNamesToServer.find(serverHost) != this->serverNamesToServer.end()) {
+						httpServer = this->serverNamesToServer.at(serverHost);
+					} else {
+						httpServer = serverNamesToServer.begin()->second;
+					}
+					HttpResponse response = httpServer.processHttpRequest(readyRequest);
+					ssize_t writen = send(fd, response.c_str(), response.size(), 0);
+					if (writen != (ssize_t) response.size()) {
+						std::cerr << "Error when sending the message" << std::endl;
+					} else {
+						std::cout << "\tMessageSent" << std::endl;
+					}
+				} else {
+					// Should not happen
+				}				
+			}
 		}
-	}
-    // Accept connection if none is present, 
+    }// Accept connection if none is present
 }
 
 void HttpPortListener::initializeSocket(){
 	this->server_fd = socket(AF_INET, SOCK_STREAM, 0); // Endpoint
 	if (this->server_fd == -1) {
 		std::cerr << __func__ << ":" << __LINE__ << ": error when creating the socket endpoint" << std::endl;
+		throw std::exception();
 	}
 	if (fcntl(this->server_fd, F_SETFL, O_NONBLOCK) == -1) {
 		std::cerr << __func__ << ":" << __LINE__ << ": error when turning socket into non blocking" << std::endl;

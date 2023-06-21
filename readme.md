@@ -23,6 +23,11 @@ Return the methods availables for that location
 ```
 Allow: GET, POST, HEAD
 ```
+### Connection
+```
+Connection: keep-alive
+Connection: close
+```
 ### Content-Language
 The Content-Language representation header is used to describe the language(s) intended for the audience
 ```

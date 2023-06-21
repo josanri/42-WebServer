@@ -1,20 +1,24 @@
 #ifndef HTTP_SERVER_HPP
 # define HTTP_SERVER_HPP
 
-#include <vector>
-#include <string>
+# include <vector>
+# include <string>
 
-class HttpServerConHttpServerfiguration
+# include "HttpResponse.hpp"
+# include "HttpRequest.hpp"
+
+class HttpServer
 {
 	private:
         std::string host;
 		std::vector<int> ports;
 	public:
-		int getNumberOfConections() const;
-		int getPort() const;
+		std::string getHost() const;
+		const std::vector<int> & getPorts() const;
 		
-		HttpServerConHttpServerfiguration(void);
-		~HttpServerConHttpServerfiguration(void);
+		HttpServer(void);
+		~HttpServer(void);
+		HttpResponse processHttpRequest(HttpRequest &);
 };
 
 #endif
