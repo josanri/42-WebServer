@@ -15,6 +15,7 @@
 
 HttpServer::HttpServer(/* args */) {
 	this->ports.push_back(8080);
+    this->host =  "localhost";
 }
 
 HttpServer::~HttpServer() {
