@@ -21,7 +21,7 @@ Accept-Language: fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5
 ### Allow
 Return the methods availables for that location
 ```
-Allow: GET, POST, HEAD
+Allow: GET, POST, HEAD, PUT
 ```
 ### Connection
 ```
