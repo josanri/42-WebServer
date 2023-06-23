@@ -13,13 +13,13 @@ class HttpServer
 	private:
 		std::vector<int> ports;
 		std::vector<std::string> serverNames;
-		std::vector<HttpLocation> locations;
+		std::vector<HttpLocation *> locations;
 		std::map<int, std::string> errorNumberToLocation;
 		unsigned int maxBody;
 	public:
 		
 		HttpServer(void);
-		HttpServer(std::vector<int> ports, std::vector<std::string> serverNames, std::vector<HttpLocation> locations, std::map<int, std::string> errorNumberToLocation, unsigned int maxBody);
+		HttpServer(std::vector<int> & ports, std::vector<std::string> &  serverNames, std::vector<HttpLocation *> & locations, std::map<int, std::string> & errorNumberToLocation, unsigned int maxBody);
 		~HttpServer(void);
 		HttpResponse processHttpRequest(HttpRequest &);
 		const std::vector<std::string> & getServerNames() const;

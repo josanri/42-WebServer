@@ -18,6 +18,15 @@ HttpServer::HttpServer(void) {
     this->serverNames.push_back("localhost");
 }
 
+HttpServer::HttpServer(std::vector<int> & ports, std::vector<std::string> &  serverNames, std::vector<HttpLocation *>  & locations,
+    std::map<int, std::string> & errorNumberToLocation, unsigned int maxBody) {
+    this->ports = ports;
+    this->locations = locations;
+    this->serverNames = serverNames;
+    this->errorNumberToLocation = errorNumberToLocation;
+    this->maxBody = maxBody;
+ }
+
 HttpServer::~HttpServer() {
     
 }
@@ -31,4 +40,8 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
 
 const std::vector<int> & HttpServer::getPorts() const {
 	return (this->ports);
+}
+
+const std::vector<std::string> & HttpServer::getServerNames() const {
+    return (this->serverNames);
 }

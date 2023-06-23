@@ -11,7 +11,7 @@ static const struct tm * getTimePointer()
 
 HttpResponse::HttpResponse()
 {
-	this->headers["date"] = std::string(asctime(getTimePointer()));
+	this->headers["Date"] = std::string(asctime(getTimePointer()));
 }
 
 HttpResponse::~HttpResponse()

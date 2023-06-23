@@ -13,6 +13,7 @@
 #include <algorithm>
 #include "HttpPortListener.hpp"
 #include "HttpResponse.hpp"
+#include "HttpServer.hpp"
 #include "HttpRequest.hpp"
 
 #define BUFFER_SIZE 8192
@@ -102,17 +103,26 @@ static int setKeepAlive(int fd){
 	return (EXIT_SUCCESS);
 }
 
+void HttpPortListener::initializeServerNamesToServer(const std::vector<HttpServer *> &servers) {
+	for (std::vector<HttpServer *>::const_iterator it = servers.begin(); it != servers.end(); it++) {
+		const std::vector<std::string> & serverNames = (*it)->getServerNames();
+		for (std::vector<std::string>::const_iterator name_it = serverNames.begin(); name_it != serverNames.end(); name_it++) {
+			this->serverNamesToServer[*name_it] = (*it);
+		}
+	}
+}
+
 void HttpPortListener::sendResponse(const int & fd) {
 	if (this->fileDescriptorToRequest.find(fd) != this->fileDescriptorToRequest.end()) {
 		HttpRequest & readyRequest = this->fileDescriptorToRequest.at(fd);
 		const std::string & serverHost = readyRequest.getHost();
-		HttpServer httpServer;
+		HttpServer *httpServer;
 		if (this->serverNamesToServer.find(serverHost) != this->serverNamesToServer.end()) {
 			httpServer = this->serverNamesToServer.at(serverHost);
 		} else {
 			httpServer = serverNamesToServer.begin()->second;
 		}
-		HttpResponse response = httpServer.processHttpRequest(readyRequest);
+		HttpResponse response = httpServer->processHttpRequest(readyRequest);
 		ssize_t writen = send(fd, response.c_str(), response.size(), 0);
 		if (writen != (ssize_t) response.size()) {
 			std::cerr << "Error when sending the message" << std::endl;
@@ -122,7 +132,6 @@ void HttpPortListener::sendResponse(const int & fd) {
 			this->fileDescriptorToRequest.erase(fd);
 		}
 	} else {
-		// Should not happen
 	}			
 }
 
@@ -143,8 +152,8 @@ void HttpPortListener::receiveRequest(const int & fd) {
 			HttpRequest & inProcessRequest = this->fileDescriptorToRequest.at(fd);
 			inProcessRequest.append(request);
 		}
-		replaceAll(request, "\r\n", "\\r\\n\n");
-		std::cout << request  << std::endl;
+		// replaceAll(request, "\r\n", "\\r\\n\n");
+		// std::cout << request  << std::endl;
 	}
 }
 
@@ -203,8 +212,9 @@ void HttpPortListener::initializeSocket(){
 	this->addConnection(this->server_fd);
 }
 
-HttpPortListener::HttpPortListener(std::map<int, HttpPortListener*> & map) : fileDescriptorToPort(map) {
-	this->port = 8080;
+HttpPortListener::HttpPortListener(int port, std::map<int, HttpPortListener*> & map, const std::vector<HttpServer *> & servers) : fileDescriptorToPort(map) {
+	this->port = port;
+	this->initializeServerNamesToServer(servers);
 }
 
 int HttpPortListener::getServerFd() const {
