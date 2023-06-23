@@ -20,13 +20,18 @@ class HttpPortListener
 		int bindServerConnection();
 		void addConnection(int fd);
 		void closeConnection(int fd);
+		void sendResponse(const int & fd);
+		void receiveRequest(const int & fd);
+		void acceptConnection(const int & fd);
 	public:
 		HttpPortListener(std::map<int, HttpPortListener*> &);
 		HttpPortListener(const HttpPortListener &);
 		~HttpPortListener(void);
 		HttpPortListener & operator=(const HttpPortListener &);
 		void initializeSocket();
+		
 		void connect(const int & fd, const int & revents);
+
 		std::set<int> & getOpenFileDescriptors(void);
 		int getServerFd() const;
 		int getPort() const;

@@ -74,18 +74,18 @@ int main(int argc, char **argv)
 
 		std::cout << "Number of file descriptors open: " << open_fds_n << std::endl;
 		int err = poll(polling_fds, open_fds_n, POLL_TIMEOUT);
+		for (nfds_t i = 0; i < open_fds_n; i++) {
+			std::cout << "\tfd=" << polling_fds[i].fd << ", events:" 
+					<< ((polling_fds[i].revents & POLLIN)  ? "POLLIN "  : "")
+					<< ((polling_fds[i].revents & POLLHUP) ? "POLLHUP " : "")
+					<< ((polling_fds[i].revents & POLLERR) ? "POLLERR " : "")
+					<< ((polling_fds[i].revents & POLLOUT) ? "POLLOUT " : "") << std::endl;
+		}
 		if (err == 0) {
 			std::cout << "\tPoll time out" << std::endl;
-			for (nfds_t i = 0; i < open_fds_n; i++) {
-				std::cout << "\tfd=" << polling_fds[i].fd << ", events:" 
-						<< ((polling_fds[i].revents & POLLIN)  ? "POLLIN "  : "")
-						<< ((polling_fds[i].revents & POLLHUP) ? "POLLHUP " : "")
-						<< ((polling_fds[i].revents & POLLERR) ? "POLLERR " : "")
-						<< ((polling_fds[i].revents & POLLOUT) ? "POLLOUT " : "") << std::endl;
-			}
-		}else if (err < 0)
+		} else if (err < 0) {
 			std::cout << "\tI/O error" << std::endl;
-		else {
+		} else {
 			for (nfds_t i = 0; i < open_fds_n; i++) {
 				HttpPortListener * httpPortListener = fileDescriptoToPort.at(polling_fds[i].fd);
 				httpPortListener->connect(polling_fds[i].fd,  polling_fds[i].revents);

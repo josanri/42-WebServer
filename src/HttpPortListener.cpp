@@ -102,76 +102,83 @@ static int setKeepAlive(int fd){
 	return (EXIT_SUCCESS);
 }
 
-void HttpPortListener::connect(const int & fd, const int & revents) {
-    socklen_t address_len = sizeof(this->address);
-    int new_socket_fd;
+void HttpPortListener::sendResponse(const int & fd) {
+	if (this->fileDescriptorToRequest.find(fd) != this->fileDescriptorToRequest.end()) {
+		HttpRequest & readyRequest = this->fileDescriptorToRequest.at(fd);
+		const std::string & serverHost = readyRequest.getHost();
+		HttpServer httpServer;
+		if (this->serverNamesToServer.find(serverHost) != this->serverNamesToServer.end()) {
+			httpServer = this->serverNamesToServer.at(serverHost);
+		} else {
+			httpServer = serverNamesToServer.begin()->second;
+		}
+		HttpResponse response = httpServer.processHttpRequest(readyRequest);
+		ssize_t writen = send(fd, response.c_str(), response.size(), 0);
+		if (writen != (ssize_t) response.size()) {
+			std::cerr << "Error when sending the message" << std::endl;
+		} else {
+			std::cout << "\tMessageSent" << std::endl;
+			// Remove request
+			this->fileDescriptorToRequest.erase(fd);
+		}
+	} else {
+		// Should not happen
+	}			
+}
 
-	std::cout << "\tfd=" << fd << ", events:" 
-						<< ((revents & POLLIN)  ? "POLLIN "  : "")
-						<< ((revents & POLLHUP) ? "POLLHUP " : "")
-						<< ((revents & POLLERR) ? "POLLERR " : "")
-						<< ((revents & POLLOUT) ? "POLLOUT " : "") << std::endl;
+void HttpPortListener::receiveRequest(const int & fd) {
+	char read_buffer[BUFFER_SIZE];
+	int len = recv(fd, read_buffer, BUFFER_SIZE, 0);
+	if (len < 0) {
+		std::cout << "There was an error reading from a socket, closing connection" << std::endl;
+		this->closeConnection(fd);
+	} else if (len == 0) {
+		// User closed connection
+		this->closeConnection(fd);
+	} else {
+		// Receive connection
+		read_buffer[len] = 0;
+		std::string request = read_buffer;
+		if (this->fileDescriptorToRequest.find(fd) != this->fileDescriptorToRequest.end()) {
+			HttpRequest & inProcessRequest = this->fileDescriptorToRequest.at(fd);
+			inProcessRequest.append(request);
+		}
+		replaceAll(request, "\r\n", "\\r\\n\n");
+		std::cout << request  << std::endl;
+	}
+}
+
+void HttpPortListener::acceptConnection(const int & fd) {
+    socklen_t address_len = sizeof(this->address);
+	int new_socket_fd;
+	
+	new_socket_fd = accept(fd, (struct sockaddr *) &address, &address_len);
+	if (new_socket_fd == -1) {
+		std::cerr << "Error when trying to accept a connection " << std::endl;
+		close(fd);
+	} else {
+		if (fcntl(new_socket_fd, F_SETFL, O_NONBLOCK) == -1 || setTimeout(fd) != 0 || setKeepAlive(fd) != 0) {
+			close(fd);
+		} else {
+			std::cout << "New file_descriptor " << new_socket_fd << std::endl;
+			this->addConnection(new_socket_fd);
+		}
+	}
+}
+
+void HttpPortListener::connect(const int & fd, const int & revents) {
 	if (fd == this->server_fd) {
 		if (revents & POLLIN) {
-			new_socket_fd = accept(fd, (struct sockaddr *) &address, &address_len);
-			if (new_socket_fd == -1) {
-				std::cerr << "Error when trying to accept a connection " << std::endl;
-				close(fd);
-			} else {
-				if (fcntl(new_socket_fd, F_SETFL, O_NONBLOCK) == -1 || setTimeout(fd) != 0 || setKeepAlive(fd) != 0) {
-					close(fd);
-				} else {
-					std::cout << "New file_descriptor " << new_socket_fd << std::endl;
-					this->addConnection(new_socket_fd);
-				}
-			}
+			this->acceptConnection(fd);
 		}
 	} else {
 		if (revents & POLLHUP || revents & POLLERR) {
 			this->closeConnection(fd);
 		} else {
 			if (revents & POLLIN) {
-				char read_buffer[BUFFER_SIZE];
-				int len = recv(fd, read_buffer, BUFFER_SIZE, 0);
-				if (len < 0) {
-					std::cout << "There was an error reading from a socket, closing connection" << std::endl;
-					this->closeConnection(fd);
-				} else if (len == 0) {
-					// User closed connection
-					this->closeConnection(fd);
-				} else {
-					// Receive connection
-					read_buffer[len] = 0;
-					std::string request = read_buffer;
-					if (this->fileDescriptorToRequest.find(fd) != this->fileDescriptorToRequest.end()) {
-						HttpRequest & inProcessRequest = this->fileDescriptorToRequest.at(fd);
-						inProcessRequest.append(request);
-					}
-					replaceAll(request, "\r\n", "\\r\\n\n");
-					std::cout << request  << std::endl;
-				}
+				this->receiveRequest(fd);
 			} else if (revents & POLLOUT) {
-				if (this->fileDescriptorToRequest.find(fd) != this->fileDescriptorToRequest.end()) {
-					HttpRequest & readyRequest = this->fileDescriptorToRequest.at(fd);
-					const std::string & serverHost = readyRequest.getHost();
-					HttpServer httpServer;
-					if (this->serverNamesToServer.find(serverHost) != this->serverNamesToServer.end()) {
-						httpServer = this->serverNamesToServer.at(serverHost);
-					} else {
-						httpServer = serverNamesToServer.begin()->second;
-					}
-					HttpResponse response = httpServer.processHttpRequest(readyRequest);
-					ssize_t writen = send(fd, response.c_str(), response.size(), 0);
-					if (writen != (ssize_t) response.size()) {
-						std::cerr << "Error when sending the message" << std::endl;
-					} else {
-						std::cout << "\tMessageSent" << std::endl;
-						// Remove request
-						this->fileDescriptorToRequest.erase(fd);
-					}
-				} else {
-					// Should not happen
-				}				
+				this->sendResponse(fd);
 			}
 		}
     }// Accept connection if none is present
