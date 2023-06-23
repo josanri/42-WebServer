@@ -139,7 +139,7 @@ void HttpPortListener::receiveRequest(const int & fd) {
 	char read_buffer[BUFFER_SIZE];
 	int len = recv(fd, read_buffer, BUFFER_SIZE, 0);
 	if (len < 0) {
-		std::cout << "There was an error reading from a socket, closing connection" << std::endl;
+		std::cerr << "There was an error reading from a socket, closing connection" << std::endl;
 		this->closeConnection(fd);
 	} else if (len == 0) {
 		// User closed connection
@@ -152,8 +152,11 @@ void HttpPortListener::receiveRequest(const int & fd) {
 			HttpRequest & inProcessRequest = this->fileDescriptorToRequest.at(fd);
 			inProcessRequest.append(request);
 		}
-		// replaceAll(request, "\r\n", "\\r\\n\n");
-		// std::cout << request  << std::endl;
+		/* Debug */
+		std::string request_debug = request;
+		replaceAll(request_debug, "\r\n", "\\r\\n\n");
+		std::cout << request_debug  << std::endl;
+		/* */
 	}
 }
 

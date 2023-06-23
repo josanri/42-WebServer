@@ -2,9 +2,17 @@
 # define HTTP_REQUEST_HPP
 # include <iostream>
 # include <map>
+# include <string>
 
-class HttpRequest
-{
+
+class HttpRequest {
+	enum HttpRequestState {
+		HEADERS_NOT_FINISHED,
+		CHUNKS_NOT_FINISHED, // Transfer Encoding chunks requests
+		BODY_NOT_FINISHED, // Post requests
+		FINISHED,
+		ERROR,
+	};
 	private:
         std::string method;
         std::string route;
@@ -12,7 +20,9 @@ class HttpRequest
 		std::map<std::string, std::string> headers;
 		std::string body;
 		std::string full_request;
-		bool isFinished;
+		size_t crlfcrlf;
+		size_t contentLength;
+		HttpRequestState state;
 	public:
 		HttpRequest();
 		HttpRequest(const HttpRequest &);
@@ -20,6 +30,7 @@ class HttpRequest
 		~HttpRequest();
 		void append(std::string & str);
 		const std::string & getHost() const;
+
 };
 
 /*
