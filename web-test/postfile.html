@@ -17,25 +17,30 @@
           <div class="collapse navbar-collapse" id="navbarNavDropdown">
             <ul class="navbar-nav">
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="./index.html">Home</a>
+                <a class="nav-link" href="./index.html">Home</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="./get.html">Get</a>
+                <a class="nav-link active" aria-current="page" href="./get.html">Get</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="./post.html">Post</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="./postfile.html">Post a File</a>
+                <a class="nav-link active" aria-current="page" href="./postfile.html">Post a File</a>
               </li>
             </ul>
           </div>
         </div>
       </nav>
     <main class=" px-4 py-5 my-5 text-center">
-        <h1 class="display-5 fw-bold">Web for testing</h1>
+        <h1 class="display-5 fw-bold">Subir archivos</h1>
         <div class="col-lg-6 mx-auto">
-          <p class="lead mb-4">Realiza peticiones GET, POST con una interfaz web.</p>
+          <p class="lead mb-4">Sube archivos para comprobar el estado de Webserv.</p>
+          <form method="post" action="http://localhost:8080" class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            <label id="uploads-label" for="uploads" type="button" class="btn btn-dark fs-1">Choose a file to upload (PNG, JPG)</label>
+            <input id="uploads" name="upload" type="file" hidden/>
+            <input type="submit" value="Subir"/>
+          </form>
         </div>
       </div>
       
