@@ -20,7 +20,6 @@ class HttpPortListener
 		int bindServerConnection();
 		void addConnection(int fd);
 		void closeConnection(int fd);
-		void processRequest(HttpRequest &);
 	public:
 		HttpPortListener(std::map<int, HttpPortListener*> &);
 		HttpPortListener(const HttpPortListener &);

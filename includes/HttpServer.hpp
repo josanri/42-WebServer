@@ -11,19 +11,20 @@
 class HttpServer
 {
 	private:
-        std::string host;
-		unsigned int maxBody;
 		std::vector<int> ports;
 		std::vector<std::string> serverNames;
-		std::vector<HttpLocation> ports;
-		std::map<int, std::string> errorNumberToLocation
+		std::vector<HttpLocation> locations;
+		std::map<int, std::string> errorNumberToLocation;
+		unsigned int maxBody;
 	public:
-		std::string getHost() const;
-		const std::vector<int> & getPorts() const;
 		
 		HttpServer(void);
+		HttpServer(std::vector<int> ports, std::vector<std::string> serverNames, std::vector<HttpLocation> locations, std::map<int, std::string> errorNumberToLocation, unsigned int maxBody);
 		~HttpServer(void);
 		HttpResponse processHttpRequest(HttpRequest &);
+		const std::vector<std::string> & getServerNames() const;
+		const std::vector<int> & getPorts() const;
+
 };
 
 #endif

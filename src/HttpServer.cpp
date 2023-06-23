@@ -13,9 +13,9 @@
 
 #include "HttpServer.hpp"
 
-HttpServer::HttpServer(/* args */) {
+HttpServer::HttpServer(void) {
 	this->ports.push_back(8080);
-    this->host =  "localhost";
+    this->serverNames.push_back("localhost");
 }
 
 HttpServer::~HttpServer() {

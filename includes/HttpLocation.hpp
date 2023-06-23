@@ -1,16 +1,13 @@
-#ifndef HTTP_SERVER_HPP
-# define HTTP_SERVER_HPP
+#ifndef HTTP_LOCATION_HPP
+# define HTTP_LOCATION_HPP
 
 # include <string>
 # include <map>
 # include <vector>
 
-
 class HttpLocation
 {
 	private:
-        std::string host;
-		std::vector<int> ports;
 		std::vector<std::string> methods;
 		std::string defaultFile;
 		std::string redirection;
@@ -20,6 +17,7 @@ class HttpLocation
 	public:
 		HttpLocation(void);
 		~HttpLocation(void);
+
 };
 
 #endif

@@ -30,11 +30,6 @@ void replaceAll(std::string & str, std::string const & s1, std::string const & s
     }
 }
 
-void HttpPortListener::processRequest(HttpRequest & httpRequest)
-{
-	(void) httpRequest;
-}
-
 void HttpPortListener::addConnection(int fd)
 {
 	this->fileDescriptorToPort[fd] = this;
@@ -171,6 +166,8 @@ void HttpPortListener::connect(const int & fd, const int & revents) {
 						std::cerr << "Error when sending the message" << std::endl;
 					} else {
 						std::cout << "\tMessageSent" << std::endl;
+						// Remove request
+						this->fileDescriptorToRequest.erase(fd);
 					}
 				} else {
 					// Should not happen
