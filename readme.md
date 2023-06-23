@@ -1,6 +1,6 @@
 # Webserv
 ## Methods
-Methods implemented **GET**, **POST**, and **DELETE**.
+Methods implemented **GET**, **POST**, **PUT** and **DELETE**.
 ## Error codes
 ## Headers not implemented
 - Accept-Charsets: from Mozilla, ```Warning: Do not use this header. Browsers omit this header and servers should ignore it.```
