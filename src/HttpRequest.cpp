@@ -10,6 +10,67 @@ HttpRequest::~HttpRequest() {
 
 }
 
+void HttpRequest::parseHeadersKeyValue(size_t first_pos, size_t last_pos)
+{
+    size_t second_pos;
+    std::string key, value;
+
+    second_pos = this->full_request.find(": ", first_pos);
+    if (second_pos == std::string::npos) {
+        this->state = HttpRequest::ERROR;
+        return ;
+    } else {
+        key = this->full_request.substr(first_pos, second_pos - first_pos);
+        value = this->full_request.substr(second_pos + 2, last_pos - second_pos - 2);
+        if (key == "Content Length") {
+            this->contentLength = atoi(value.c_str());
+        } else {
+            this->headers[key] = value;
+        }
+    }
+}
+
+void HttpRequest::parseHeaders()
+{
+    size_t first_pos = 0, second_pos;
+
+    second_pos = this->full_request.find(' ', 0);
+    if (second_pos == std::string::npos) {
+        this->state = HttpRequest::ERROR;
+        return ;
+    } else {
+        this->method =  this->full_request.substr(first_pos, second_pos - first_pos);
+    }
+    first_pos = second_pos + 1;
+    second_pos = this->full_request.find(' ', first_pos);
+    if (second_pos == std::string::npos) {
+        this->state = HttpRequest::ERROR;
+        return ;
+    } else {
+        this->route = this->full_request.substr(first_pos, second_pos - first_pos);
+    }
+    first_pos = second_pos + 1;
+    second_pos = this->full_request.find("\r\n", first_pos);
+    if (second_pos == std::string::npos) {
+        this->state = HttpRequest::ERROR;
+        return ;
+    } else {
+        this->httpVersion =  this->full_request.substr(first_pos, second_pos - first_pos);
+    }
+
+    while (this->crlfcrlf != second_pos)
+    {
+        first_pos = second_pos + 2;
+        second_pos = this->full_request.find("\r\n", first_pos);
+        this->parseHeadersKeyValue(first_pos, second_pos);
+        if (second_pos == std::string::npos)
+            this->state = HttpRequest::ERROR;
+        if (this->state == HttpRequest::ERROR)
+            break;
+    }
+
+}
+
 void HttpRequest::append(std::string & str)
 {
     this->full_request.append(str);
@@ -18,13 +79,13 @@ void HttpRequest::append(std::string & str)
         if (this->crlfcrlf != std::string::npos) {
             if (this->full_request.find("GET", 0, 3) != std::string::npos) {
                 this->state = HttpRequest::FINISHED;
-                // TODO -Parse Request
+                this->parseHeaders();
             } else if (this->full_request.find("POST", 0, 4) != std::string::npos
                 || this->full_request.find("PUT", 0, 3) != std::string::npos
                 || this->full_request.find("DELETE", 0, 6) != std::string::npos)
             {
                 this->state = HttpRequest::BODY_NOT_FINISHED;
-                // TODO - Parse Request
+                this->parseHeaders();
             } else {
                 this->state = HttpRequest::ERROR; // Unrecognized metod
             }
@@ -39,7 +100,17 @@ void HttpRequest::append(std::string & str)
     }
 }
 
-const std::string & HttpRequest::getHost() const
+std::string HttpRequest::getHost()
 {
-    return this->host;
+    return this->headers["Host"];
+}
+
+HttpRequest & HttpRequest::operator=(HttpRequest const&src) {
+    if (this != &src)
+    {
+        this->full_request = src.full_request;
+    }
+    return (*this);
+
+
 }

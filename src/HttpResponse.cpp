@@ -19,7 +19,6 @@ HttpResponse::~HttpResponse()
 
 }
 
-
 const char *HttpResponse::c_str()
 {
 	return (this->response.c_str());

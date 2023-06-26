@@ -16,20 +16,23 @@ class HttpRequest {
 	private:
         std::string method;
         std::string route;
-        std::string host;
+        std::string httpVersion;
 		std::map<std::string, std::string> headers;
 		std::string body;
 		std::string full_request;
 		size_t crlfcrlf;
 		size_t contentLength;
 		HttpRequestState state;
+		void parseHeadersKeyValue(size_t first_pos, size_t second_pos);
+
 	public:
 		HttpRequest();
 		HttpRequest(const HttpRequest &);
 		HttpRequest & operator=(const HttpRequest &);
 		~HttpRequest();
 		void append(std::string & str);
-		const std::string & getHost() const;
+		void parseHeaders();
+		std::string getHost();
 
 };
 

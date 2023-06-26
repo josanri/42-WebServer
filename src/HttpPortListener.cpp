@@ -1,16 +1,19 @@
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <poll.h>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/socket.h>
+
 #include <iostream>
-#include <unistd.h>
-#include <fcntl.h>
-#include <poll.h>
 #include <map>
 #include <algorithm>
+
 #include "HttpPortListener.hpp"
 #include "HttpResponse.hpp"
 #include "HttpServer.hpp"
@@ -151,6 +154,9 @@ void HttpPortListener::receiveRequest(const int & fd) {
 		if (this->fileDescriptorToRequest.find(fd) != this->fileDescriptorToRequest.end()) {
 			HttpRequest & inProcessRequest = this->fileDescriptorToRequest.at(fd);
 			inProcessRequest.append(request);
+		} else {
+			this->fileDescriptorToRequest[fd] = HttpRequest();
+			this->fileDescriptorToRequest[fd].append(request);
 		}
 		/* Debug */
 		std::string request_debug = request;
