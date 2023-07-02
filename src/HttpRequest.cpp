@@ -11,6 +11,10 @@ HttpRequest::~HttpRequest() {
 
 }
 
+HttpRequest::HttpRequest(const HttpRequest &) {
+
+}
+
 void HttpRequest::parseHeadersKeyValue(size_t first_pos, size_t last_pos)
 {
     size_t second_pos;
@@ -24,7 +28,7 @@ void HttpRequest::parseHeadersKeyValue(size_t first_pos, size_t last_pos)
         key = this->full_request.substr(first_pos, second_pos - first_pos);
         value = this->full_request.substr(second_pos + 2, last_pos - second_pos - 2);
         if (key == "Content Length") {
-            this->contentLength = atoi(value.c_str());
+            this->contentLength = 0; //atoi(value.c_str());
         } else {
             this->headers[key] = value;
         }
