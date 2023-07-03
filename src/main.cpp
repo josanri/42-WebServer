@@ -25,7 +25,7 @@ bool fake_parse(char *filename, std::vector<HttpServer *> servers){
 			serverNames.push_back("localhost");
 
 			std::vector<HttpLocation *> locations;
-			std::string route = "./test";
+			std::string route = "./web-test";
 			std::vector<std::string> methods;
 			methods.push_back("GET");
 			methods.push_back("POST");
@@ -44,7 +44,8 @@ bool fake_parse(char *filename, std::vector<HttpServer *> servers){
 			HttpServer *newServer = new HttpServer(ports, serverNames, locations, errorNumberToLocation, maxBody);
 			servers.push_back(newServer);
 		}
-	} catch (std::exception) {
+	} catch (std::exception & e) {
+		std::cerr << __func__ << ":" << __LINE__ << ": error when parsing the configuration file" << std::endl;
 		return false;
 	}
 	return true;
@@ -57,7 +58,7 @@ bool fake_portListeners(std::vector<HttpPortListener *> & portListenerVector, st
 	try {
 		listener->initializeSocket();
 		portListenerVector.push_back(listener);
-	} catch (std::exception) {
+	} catch (std::exception & e) {
 		std::cerr << __func__ << ":" << __LINE__ << ": error when initializating a socket endpoint" << std::endl;
 		return (false);
 	}

@@ -1,6 +1,7 @@
 #include "HttpRequest.hpp"
 #include <map>
 #include <iostream>
+#include <cstdlib>
 
 HttpRequest::HttpRequest() {
 
