@@ -10,6 +10,7 @@
 #include "HttpServer.hpp"
 #include "HttpLocation.hpp"
 #include "HttpPortListener.hpp"
+#include "Parser.hpp"
 
 #define POLL_TIMEOUT 1000
 
@@ -101,10 +102,12 @@ int main(int argc, char **argv)
 		std::cerr << "usage: ./webserv configuration_file" << std::endl;
 		return (1);
 	}
-	if (!fake_parse(argv[1], serverVector)) {
-		std::cerr << __func__ << ":" << __LINE__ << ": error while parsing, exiting the program" << std::endl;
-		return (1);
-	}
+	Parser parser(argv[1]);
+	parser.parse(serverVector);
+	// if (!fake_parse(argv[1], serverVector)) {
+	// 	std::cerr << __func__ << ":" << __LINE__ << ": error while parsing, exiting the program" << std::endl;
+	// 	return (1);
+	// }
 	if (!fake_portListeners(portListenerVector, fileDescriptoToPort, serverVector)) {
 		std::cerr << __func__ << ":" << __LINE__ << ": not all the socket could be initialized, exiting the program" << std::endl;
 		return (1);
