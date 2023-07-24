@@ -12,11 +12,22 @@ static const struct tm * getTimePointer()
 HttpResponse::HttpResponse()
 {
 	this->headers["Date"] = std::string(asctime(getTimePointer()));
+	this->response = "hola";
 }
 
 HttpResponse::~HttpResponse()
 {
 
+}
+
+void HttpResponse::setStatusCode(int statusCode)
+{
+	this->statusCode = statusCode;
+}
+
+void HttpResponse::addHeader(std::string key, std::string value)
+{
+	this->headers[key] = value;
 }
 
 const char *HttpResponse::c_str()

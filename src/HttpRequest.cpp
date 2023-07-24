@@ -41,6 +41,7 @@ void HttpRequest::parseHeaders()
         return ;
     } else {
         this->method =  this->full_request.substr(first_pos, second_pos - first_pos);
+        std::cout << "Method: " << this->method << std::endl;
     }
     first_pos = second_pos + 1;
     second_pos = this->full_request.find(' ', first_pos);
@@ -104,6 +105,16 @@ void HttpRequest::append(std::string & str)
 std::string HttpRequest::getHost()
 {
     return this->headers["Host"];
+}
+
+std::string HttpRequest::getMethod()
+{
+    return this->method;
+}
+
+std::string HttpRequest::getRoute()
+{
+    return this->route;
 }
 
 HttpRequest & HttpRequest::operator=(HttpRequest const&src) {

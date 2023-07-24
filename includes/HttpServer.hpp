@@ -24,6 +24,7 @@ class HttpServer
 		HttpResponse processHttpRequest(HttpRequest &);
 		const std::vector<std::string> & getServerNames() const;
 		const std::vector<int> & getPorts() const;
+		HttpLocation* getLocation(HttpRequest & request);
 
 };
 

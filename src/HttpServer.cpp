@@ -33,8 +33,29 @@ HttpServer::~HttpServer() {
 
 HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
 {
-    (void) request;
-    return HttpResponse();
+    HttpResponse response;
+    std::cout << "Processing request" << std::endl;
+
+    HttpLocation *location = getLocation(request);
+    if (location == NULL) response.setStatusCode(404);
+    else if (!location->isMethodAllowed(request.getMethod())) response.setStatusCode(405);
+    // TODO: Control max size
+    else {
+        if (request.getMethod() == "GET") {
+			// response = handle_get(request, loc);
+		} else if (request.getMethod() == "POST") {
+			// response = handle_post(request, loc);
+		} else if (request.getMethod() == "DELETE") {
+			// response = handle_delete(request, loc);
+		} else if (request.getMethod() == "PUT") {
+			// response = handle_put(request, loc);
+		} else response.setStatusCode(405);
+    }
+
+    response.addHeader("Connection", "close");
+    // TODO: server name to headers
+
+    return response;
 }
 
 
@@ -44,4 +65,24 @@ const std::vector<int> & HttpServer::getPorts() const {
 
 const std::vector<std::string> & HttpServer::getServerNames() const {
     return (this->serverNames);
+}
+
+HttpLocation* HttpServer::getLocation(HttpRequest & request) {
+    std::string route = request.getRoute();
+    std::string subStringRoute;
+    HttpLocation *location;
+    std::string locationRoute;
+
+    location = NULL;
+    // TODO: Segfault here
+    for (std::vector<HttpLocation *>::iterator it = this->locations.begin(); it != this->locations.end() && location == NULL; it++) {
+        locationRoute = (*it)->getRoute();
+
+        if (locationRoute[locationRoute.length() - 1] == '/') locationRoute = locationRoute.substr(0, locationRoute.length() - 1);
+        subStringRoute = route.substr(0, locationRoute.length());
+
+        if (locationRoute.compare(subStringRoute) == 0 && location == NULL) location = *it;
+    }
+
+    return location;
 }
