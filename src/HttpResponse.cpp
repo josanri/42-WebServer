@@ -12,11 +12,33 @@ static const struct tm * getTimePointer()
 HttpResponse::HttpResponse()
 {
 	this->headers["Date"] = std::string(asctime(getTimePointer()));
+	this->response = "hola";
 }
 
 HttpResponse::~HttpResponse()
 {
 
+}
+
+HttpResponse & HttpResponse::operator=(const HttpResponse & rhs)
+{
+	if (this != &rhs)
+	{
+		this->headers = rhs.headers;
+		this->response = rhs.response;
+		this->statusCode = rhs.statusCode;
+	}
+	return (*this);
+}
+
+void HttpResponse::setStatusCode(int statusCode)
+{
+	this->statusCode = statusCode;
+}
+
+void HttpResponse::addHeader(std::string key, std::string value)
+{
+	this->headers[key] = value;
 }
 
 const char *HttpResponse::c_str()

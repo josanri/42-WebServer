@@ -10,6 +10,7 @@
 #include <cerrno>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 #include "HttpLocation.hpp"
 
@@ -30,4 +31,14 @@ HttpLocation::HttpLocation(std::string route, std::vector<std::string> & methods
 
 HttpLocation::~HttpLocation() {
     
+}
+
+std::string HttpLocation::getRoute() const {
+    return (this->route);
+}
+
+bool HttpLocation::isMethodAllowed(std::string method) {
+    std::vector<std::string>::iterator it = std::find(this->methods.begin(), this->methods.end(), method);
+
+    return it != this->methods.end();
 }

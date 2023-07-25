@@ -16,14 +16,24 @@ class HttpServer
 		std::vector<HttpLocation *> locations;
 		std::map<int, std::string> errorNumberToLocation;
 		unsigned int maxBody;
+
+		HttpResponse handle_get(HttpRequest & request);
+		HttpResponse handle_post(HttpRequest & request);
+		HttpResponse handle_put(HttpRequest & request);
+		HttpResponse handle_delete(HttpRequest & request);
+		HttpLocation* getLocation(HttpRequest & request);
+
 	public:
 		
 		HttpServer(void);
 		HttpServer(std::vector<int> & ports, std::vector<std::string> &  serverNames, std::vector<HttpLocation *> & locations, std::map<int, std::string> & errorNumberToLocation, unsigned int maxBody);
+		HttpServer & operator=(const HttpServer & rhs);
 		~HttpServer(void);
 		HttpResponse processHttpRequest(HttpRequest &);
 		const std::vector<std::string> & getServerNames() const;
 		const std::vector<int> & getPorts() const;
+		std::vector<HttpLocation *> getLocations();
+
 
 };
 

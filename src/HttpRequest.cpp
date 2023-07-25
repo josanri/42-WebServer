@@ -106,6 +106,16 @@ std::string HttpRequest::getHost()
     return this->headers["Host"];
 }
 
+std::string HttpRequest::getMethod()
+{
+    return this->method;
+}
+
+std::string HttpRequest::getRoute()
+{
+    return this->route;
+}
+
 HttpRequest & HttpRequest::operator=(HttpRequest const&src) {
     if (this != &src)
     {

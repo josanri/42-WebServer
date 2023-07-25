@@ -14,9 +14,9 @@ class HttpRequest {
 		ERROR,
 	};
 	private:
-        std::string method;
-        std::string route;
-        std::string httpVersion;
+		std::string method;
+		std::string route;
+		std::string httpVersion;
 		std::map<std::string, std::string> headers;
 		std::string body;
 		std::string full_request;
@@ -31,6 +31,8 @@ class HttpRequest {
 		~HttpRequest();
 		void append(std::string & str);
 		void parseHeaders();
+		std::string getMethod();
+		std::string getRoute();
 		std::string getHost();
 
 };

@@ -13,7 +13,7 @@
 
 #define POLL_TIMEOUT 1000
 
-bool fake_parse(char *filename, std::vector<HttpServer *> servers){
+bool fake_parse(char *filename, std::vector<HttpServer *> &servers){
 	(void) filename;
 	// Parse
 	try {
@@ -29,6 +29,8 @@ bool fake_parse(char *filename, std::vector<HttpServer *> servers){
 			std::vector<std::string> methods;
 			methods.push_back("GET");
 			methods.push_back("POST");
+			methods.push_back("PUT");
+			methods.push_back("DELETE");
 			std::string defaultFile = "";
 			std::string redirectionRoute = "";
 			std::map<std::string, std::string> fileExtensionToCGI;
@@ -111,19 +113,19 @@ int main(int argc, char **argv)
 		nfds_t open_fds_n = getNumberOfFds(portListenerVector);
 		struct pollfd* polling_fds = createPollStruct(open_fds_n, portListenerVector);
 
-		std::cout << "Number of file descriptors open: " << open_fds_n << std::endl;
+		// std::cout << "Number of file descriptors open: " << open_fds_n << std::endl;
 		int err = poll(polling_fds, open_fds_n, POLL_TIMEOUT);
-		for (nfds_t i = 0; i < open_fds_n; i++) {
-			std::cout << "\tfd=" << polling_fds[i].fd << ", events:" 
-					<< ((polling_fds[i].revents & POLLIN)  ? "POLLIN "  : "")
-					<< ((polling_fds[i].revents & POLLHUP) ? "POLLHUP " : "")
-					<< ((polling_fds[i].revents & POLLERR) ? "POLLERR " : "")
-					<< ((polling_fds[i].revents & POLLOUT) ? "POLLOUT " : "") << std::endl;
-		}
+		// for (nfds_t i = 0; i < open_fds_n; i++) {
+		// 	std::cout << "\tfd=" << polling_fds[i].fd << ", events:" 
+		// 			<< ((polling_fds[i].revents & POLLIN)  ? "POLLIN "  : "")
+		// 			<< ((polling_fds[i].revents & POLLHUP) ? "POLLHUP " : "")
+		// 			<< ((polling_fds[i].revents & POLLERR) ? "POLLERR " : "")
+		// 			<< ((polling_fds[i].revents & POLLOUT) ? "POLLOUT " : "") << std::endl;
+		// }
 		if (err == 0) {
-			std::cout << "\tPoll time out" << std::endl;
+			// std::cout << "\tPoll time out" << std::endl;
 		} else if (err < 0) {
-			std::cout << "\tI/O error" << std::endl;
+			// std::cout << "\tI/O error" << std::endl;
 		} else {
 			for (nfds_t i = 0; i < open_fds_n; i++) {
 				HttpPortListener * httpPortListener = fileDescriptoToPort.at(polling_fds[i].fd);
