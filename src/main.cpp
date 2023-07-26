@@ -14,60 +14,6 @@
 
 #define POLL_TIMEOUT 1000
 
-bool fake_parse(char *filename, std::vector<HttpServer *> &servers){
-	(void) filename;
-	// Parse
-	try {
-		for (int i = 0; i < 1; i++) {
-			std::vector<int>ports;
-			ports.push_back(8080);
-
-			std::vector<std::string>serverNames;
-			serverNames.push_back("localhost");
-
-			std::vector<HttpLocation *> locations;
-			std::string route = "./web-test";
-			std::vector<std::string> methods;
-			methods.push_back("GET");
-			methods.push_back("POST");
-			methods.push_back("PUT");
-			methods.push_back("DELETE");
-			std::string defaultFile = "";
-			std::string redirectionRoute = "";
-			std::map<std::string, std::string> fileExtensionToCGI;
-			bool directoryListing = false;
-			bool upload = false;
-			HttpLocation *location_1 = new HttpLocation(route, methods, defaultFile, redirectionRoute, fileExtensionToCGI, directoryListing, upload);
-			locations.push_back(location_1);
-
-			std::map<int, std::string> errorNumberToLocation;
-			// Empty
-			
-			unsigned int maxBody = 1500;
-			HttpServer *newServer = new HttpServer(ports, serverNames, locations, errorNumberToLocation, maxBody);
-			servers.push_back(newServer);
-		}
-	} catch (std::exception & e) {
-		std::cerr << __func__ << ":" << __LINE__ << ": error when parsing the configuration file" << std::endl;
-		return false;
-	}
-	return true;
-}
-
-bool fake_portListeners(std::vector<HttpPortListener *> & portListenerVector, std::map<int,HttpPortListener *> & fileDescriptoToPort, std::vector<HttpServer *> & serverVector)
-{
-
-	HttpPortListener *listener = new HttpPortListener(8080, fileDescriptoToPort, serverVector);
-	try {
-		listener->initializeSocket();
-		portListenerVector.push_back(listener);
-	} catch (std::exception & e) {
-		std::cerr << __func__ << ":" << __LINE__ << ": error when initializating a socket endpoint" << std::endl;
-		return (false);
-	}
-	return (true);
-}
-
 int getNumberOfFds(std::vector<HttpPortListener *> vector) {
 	int acc_size = 0;
 	for (std::vector<HttpPortListener *>::iterator it = vector.begin(); it !=  vector.end(); it++)
@@ -95,7 +41,6 @@ struct pollfd* createPollStruct(nfds_t open_fds, std::vector<HttpPortListener *>
 
 int main(int argc, char **argv)
 {
-	std::vector<HttpServer *> serverVector;
 	std::vector<HttpPortListener *> portListenerVector;
 	std::map<int,HttpPortListener *> fileDescriptoToPort; // Access in O(log n) instead of O(n)
 	if (argc != 2) {
@@ -103,15 +48,15 @@ int main(int argc, char **argv)
 		return (1);
 	}
 	Parser parser(argv[1]);
-	parser.parse(serverVector);
+	parser.parse(portListenerVector, fileDescriptoToPort);
 	// if (!fake_parse(argv[1], serverVector)) {
 	// 	std::cerr << __func__ << ":" << __LINE__ << ": error while parsing, exiting the program" << std::endl;
 	// 	return (1);
 	// }
-	if (!fake_portListeners(portListenerVector, fileDescriptoToPort, serverVector)) {
-		std::cerr << __func__ << ":" << __LINE__ << ": not all the socket could be initialized, exiting the program" << std::endl;
-		return (1);
-	}
+	// if (!fake_portListeners(portListenerVector, fileDescriptoToPort, serverVector)) {
+	// 	std::cerr << __func__ << ":" << __LINE__ << ": not all the socket could be initialized, exiting the program" << std::endl;
+	// 	return (1);
+	// }
 	while (true) {
 		nfds_t open_fds_n = getNumberOfFds(portListenerVector);
 		struct pollfd* polling_fds = createPollStruct(open_fds_n, portListenerVector);

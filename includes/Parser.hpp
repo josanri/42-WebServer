@@ -4,6 +4,7 @@
 # include <string>
 # include <vector>
 # include "HttpServer.hpp"
+# include "HttpPortListener.hpp"
 
 class Parser {
 	private:
@@ -21,7 +22,7 @@ class Parser {
 		~Parser(void);
 
 		// std::vector<HttpServer *> parse(void);
-		void parse(std::vector<HttpServer *> servers);
+		void parse(std::vector<HttpPortListener *> listeners, std::map<int,HttpPortListener *> & fileDescriptoToPort);
 };
 
 #endif

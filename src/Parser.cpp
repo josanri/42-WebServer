@@ -2,7 +2,9 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <cctype>
 #include "Parser.hpp"
+#include "utils.h"
 
 std::string extract_property(std::string & file_content, std::string const & property) {
   std::string property_value = "";
@@ -32,55 +34,44 @@ Parser::Parser(std::string const & filePath): filePath(filePath) {
 Parser::~Parser () {
 }
 
+void Parser::parse(std::vector<HttpPortListener *> listeners, std::map<int,HttpPortListener *> & fileDescriptoToPort) {
+  this->readFile();
+  std::map<int,std::vector<HttpServer *> > portToServer;
+  
+  do {
+    HttpServer *server = this->extractServer();
+    if (server != NULL) {
+      std::vector<int>::iterator portsIterator;
+      std::vector<int> ports = server->getPorts();
+      for (portsIterator = ports.begin(); portsIterator != ports.end(); portsIterator++) {
+        int port = *portsIterator;
 
-// std::vector<HttpServer *> Parser::parse(void) {
-void Parser::parse(std::vector<HttpServer *> servers) {
-  this->fileContent = "server={ \
-  ports=80,400; \
-  server_names=www.google.com,www.google.es; \
-  location={ \
-    route=/; \
-    methods=GET,POST; \
-    redirection=/one; \
-    default_file=index.html; \
-    directory_search=/tmp/www; \
-    directory_listing=false; \
-    cgi_file_extension=.php,.alho; \
-  } \
-  error_pages=/error_pages; \
-  body_max=500; \
-}";
+        std::map<int,std::vector<HttpServer *> >::iterator portToServerIterator = portToServer.find(port);
 
-  HttpServer *server = this->extractServer();
-  servers.push_back(server);
+        if (portToServerIterator == portToServer.end()) {
+          std::vector<HttpServer *> servers;
+          servers.push_back(server);
+          portToServer[port] = servers;
+        } else {
+          portToServerIterator->second.push_back(server);
+        }
+      }
+    } else {
+      // Free memory
+      std::cerr << "Error: Could not parse server" << std::endl;
+      return;
+    }
+  } while (!isEmpty(this->fileContent));
 
-  // do {
-  //   HttpServer *server = this->extractServer();
-  //   if (server != NULL) {
-  //     servers.push_back(server);
-  //   } else {
-  //     // Free memory
-  //   }
-  // } while (this->fileContent.length() > 0);
-
-
-  // std::string location_chunk = extract_chunk_from_file(server_chunk, "location");
-  // std::cout  << server_chunk << std::endl;
-  // std::cout<<location_chunk<<std::endl;
-
-  // std::string location_route = extract_property(location_chunk, "route");
-  // std::string location_methods = extract_property(location_chunk, "methods");
-
-}
-
-std::vector<std::string> split(std::string const & str, char delimiter) {
-  std::vector<std::string> result;
-  std::stringstream ss(str);
-  std::string token;
-  while (std::getline(ss, token, delimiter)) {
-    result.push_back(token);
+  std::map<int,std::vector<HttpServer *> >::iterator portToServerIterator;
+  for (portToServerIterator = portToServer.begin(); portToServerIterator != portToServer.end(); portToServerIterator++) {
+    int port = portToServerIterator->first;
+    std::vector<HttpServer *> servers = portToServerIterator->second;
+    HttpPortListener *listener = new HttpPortListener(port, fileDescriptoToPort, servers);
+    // TODO: initialize in separate function
+    listener->initializeSocket();
+    listeners.push_back(listener);
   }
-  return result;
 }
 
 
@@ -94,24 +85,19 @@ HttpLocation * Parser::extractLocation(std::string & serverChunk) {
   std::string redirection = extract_property(locationChunk, "redirection");
   std::string defaultFile = extract_property(locationChunk, "default_file");
   std::string directorySearch = extract_property(locationChunk, "directory_search");
+  std::string upload = extract_property(locationChunk, "upload");
   std::string directoryListing = extract_property(locationChunk, "directory_listing");
-  // std::string cgiFileExtension = extract_property(locationChunk, "cgi_file_extension");
+
+  // TODO: check bools
+  bool directoryListingBool = directoryListing == "true";
+  bool uploadBool = upload == "true";
 
   std::vector<std::string> methodsVector = split(methods, ',');
-  // std::vector<std::string>::iterator methodsIterator;
-  // for (methodsIterator = methodsVector.begin(); methodsIterator != methodsVector.end(); methodsIterator++) {
-  //   std::cout << *methodsIterator << std::endl;
-  // }
 
-  // std::vector<std::string> cgiFileExtensionVector = split(cgiFileExtension, ',');
-  // std::vector<std::string>::iterator cgiFileExtensionIterator;
-  // for (cgiFileExtensionIterator = cgiFileExtensionVector.begin(); cgiFileExtensionIterator != cgiFileExtensionVector.end(); cgiFileExtensionIterator++) {
-  //   std::cout << *cgiFileExtensionIterator << std::endl;
-  // }
-
+  // TODO: next line
   std::map<std::string, std::string> cgiFileExtensionMap;
 
-  HttpLocation *location = new HttpLocation(route, methodsVector, defaultFile, redirection, cgiFileExtensionMap, false, false);
+  HttpLocation *location = new HttpLocation(route, methodsVector, defaultFile, redirection, cgiFileExtensionMap, directoryListingBool, uploadBool);
 
   return location;
 }
@@ -121,7 +107,6 @@ HttpServer * Parser::extractServer() {
   if (serverChunk.length() == 0) {
     return NULL;
   }
-  std::cout << "ServerChunk: " << std::endl << serverChunk << std::endl;
 
   std::string serverNamesRAW = extract_property(serverChunk, "server_names");
   std::vector<std::string> serverNames = split(serverNamesRAW, ',');
@@ -138,6 +123,7 @@ HttpServer * Parser::extractServer() {
     ports.push_back(port);
   }
 
+  // TODO: errorNumberToLocation
   std::map<int, std::string> errorNumberToLocation;
   std::string errorPagesRAW = extract_property(serverChunk, "error_pages");
   
@@ -156,22 +142,6 @@ HttpServer * Parser::extractServer() {
   HttpServer *server = new HttpServer(ports, serverNames, locations, errorNumberToLocation, maxBody);
 
   return server;
-
-
-
-  // int         body_max = extract_number_property(serverChunk, "body_max");
-
-
-  // std::cout << "Parseruration:" << std::endl
-  //           << "  error_pages: " << error_pages << std::endl
-  //           << "  server_names: " << server_names << std::endl
-  //           << "  ports: " << ports << std::endl
-  //           << "  body_max: " << body_max << std::endl;
-  //           // << "  location:" << std::endl
-  //           //   << "    route: " << location_route << std::endl
-  //           //   << "    methods: " << location_methods << std::endl;
-
-  // return server;
 }
 
 std::string Parser::extractChunk(std::string & content, std::string const & chunk_name) {
@@ -196,6 +166,8 @@ std::string Parser::extractChunk(std::string & content, std::string const & chun
     }
     content = content.substr(start, content.length() - end);
   }
+
+  // TODO: throw ERR if empty
 
   return chunk;
 }

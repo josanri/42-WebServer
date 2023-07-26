@@ -11,8 +11,8 @@ HttpRequest::~HttpRequest() {
 
 }
 
-HttpRequest::HttpRequest(const HttpRequest &) {
-
+HttpRequest::HttpRequest(const HttpRequest & src) {
+    (void)src;
 }
 
 void HttpRequest::parseHeadersKeyValue(size_t first_pos, size_t last_pos)
