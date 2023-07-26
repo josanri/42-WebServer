@@ -34,7 +34,7 @@ Parser::Parser(std::string const & filePath): filePath(filePath) {
 Parser::~Parser () {
 }
 
-void Parser::parse(std::vector<HttpPortListener *> listeners, std::map<int,HttpPortListener *> & fileDescriptoToPort) {
+void Parser::parse(std::vector<HttpPortListener *> & listeners, std::map<int,HttpPortListener *> & fileDescriptoToPort) {
   this->readFile();
   std::map<int,std::vector<HttpServer *> > portToServer;
   
@@ -68,7 +68,6 @@ void Parser::parse(std::vector<HttpPortListener *> listeners, std::map<int,HttpP
     int port = portToServerIterator->first;
     std::vector<HttpServer *> servers = portToServerIterator->second;
     HttpPortListener *listener = new HttpPortListener(port, fileDescriptoToPort, servers);
-    // TODO: initialize in separate function
     listener->initializeSocket();
     listeners.push_back(listener);
   }
@@ -129,14 +128,11 @@ HttpServer * Parser::extractServer() {
   
   unsigned int maxBody = extract_number_property(serverChunk, "body_max");
 
-  std::cout << "ServerChunk: " << std::endl << serverChunk << std::endl;
-
   std::vector<HttpLocation *> locations;
   HttpLocation *location = this->extractLocation(serverChunk);
   do {
     locations.push_back(location);
     location = this->extractLocation(serverChunk);
-    std::cout << "ServerChunk: " << std::endl << serverChunk << std::endl;
   } while (location != NULL);
 
   HttpServer *server = new HttpServer(ports, serverNames, locations, errorNumberToLocation, maxBody);
