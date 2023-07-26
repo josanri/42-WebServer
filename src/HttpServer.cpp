@@ -48,21 +48,20 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
     std::cout << "Processing request " << request.getMethod() << std::endl;
 
     HttpLocation *location = getLocation(request);
-    response = handle_delete(request);
     if (location == NULL) response.setStatusCode(404);
-    // else if (!location->isMethodAllowed(request.getMethod())) response.setStatusCode(405);
-    // // TODO: Control max size
-    // else {
-    //     if (request.getMethod() == "GET") {
-	// 		// response = handle_get(request, location);
-	// 	} else if (request.getMethod() == "POST") {
-	// 		// response = handle_post(request, location);
-	// 	} else if (request.getMethod() == "DELETE") {
-	// 		// response = handle_delete(request);
-	// 	} else if (request.getMethod() == "PUT") {
-	// 		// response = handle_put(request, location);
-	// 	} else response.setStatusCode(405);
-    // }
+    else if (!location->isMethodAllowed(request.getMethod())) response.setStatusCode(405);
+    // TODO: Control max size
+    else {
+        if (request.getMethod() == "GET") {
+			// response = handle_get(request, location);
+		} else if (request.getMethod() == "POST") {
+			// response = handle_post(request, location);
+		} else if (request.getMethod() == "DELETE") {
+			response = handle_delete(request);
+		} else if (request.getMethod() == "PUT") {
+			// response = handle_put(request, location);
+		} else response.setStatusCode(405);
+    }
 
     response.addHeader("Connection", "close");
     // TODO: server name to headers
