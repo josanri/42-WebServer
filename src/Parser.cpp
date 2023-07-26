@@ -4,31 +4,10 @@
 #include <iostream>
 #include <cctype>
 #include "Parser.hpp"
+#include "Extractor.hpp"
 #include "utils.h"
 
-std::string extract_property(std::string & file_content, std::string const & property) {
-  std::string property_value = "";
-  std::string property_name = property + "=";
-  std::size_t found = file_content.find(property_name);
-  if (found != std::string::npos) {
-    std::size_t start = found + property_name.length();
-    std::size_t end = file_content.find(";", start);
-    property_value = file_content.substr(start, end - start);
-    file_content = file_content.substr(0, found) + file_content.substr(end + 1, file_content.length() - end);
-  }
-  return property_value;
-}
-
-int extract_number_property(std::string & file_content, std::string const & property) {
-  std::string property_value = extract_property(file_content, property);
-  std::stringstream ss(property_value);
-  int value;
-  ss >> value;
-  return value;
-}
-
 Parser::Parser(std::string const & filePath): filePath(filePath) {
-
 }
 
 Parser::~Parser () {
@@ -79,25 +58,21 @@ HttpLocation * Parser::extractLocation(std::string & serverChunk) {
   if (locationChunk.length() == 0) {
     return NULL;
   }
-  std::string route = extract_property(locationChunk, "route");
-  std::string root = extract_property(locationChunk, "root");
-  std::string methods = extract_property(locationChunk, "methods");
-  std::string redirection = extract_property(locationChunk, "redirection");
-  std::string defaultFile = extract_property(locationChunk, "default_file");
-  std::string directorySearch = extract_property(locationChunk, "directory_search");
-  std::string upload = extract_property(locationChunk, "upload");
-  std::string directoryListing = extract_property(locationChunk, "directory_listing");
 
-  // TODO: check bools
-  bool directoryListingBool = directoryListing == "true";
-  bool uploadBool = upload == "true";
+  std::string root = Extractor::str(locationChunk, "root");
+  std::string route = Extractor::str(locationChunk, "route");
+  std::string redirection = Extractor::str(locationChunk, "redirection");
+  std::string defaultFile = Extractor::str(locationChunk, "default_file");
 
-  std::vector<std::string> methodsVector = split(methods, ',');
+  std::vector<std::string> methods = Extractor::v_str(locationChunk, "methods");
 
-  // TODO: next line
+  bool upload = Extractor::b(locationChunk, "upload");
+  bool directoryListing = Extractor::b(locationChunk, "directory_listing");
+
+  // TODO: cgiFileExtensionMap
   std::map<std::string, std::string> cgiFileExtensionMap;
 
-  HttpLocation *location = new HttpLocation(root, route, methodsVector, defaultFile, redirection, cgiFileExtensionMap, directoryListingBool, uploadBool);
+  HttpLocation *location = new HttpLocation(root, route, methods, defaultFile, redirection, cgiFileExtensionMap, directoryListing, upload);
 
   return location;
 }
@@ -108,26 +83,14 @@ HttpServer * Parser::extractServer() {
     return NULL;
   }
 
-  std::string serverNamesRAW = extract_property(serverChunk, "server_names");
-  std::vector<std::string> serverNames = split(serverNamesRAW, ',');
+  std::vector<std::string> serverNames = Extractor::v_str(serverChunk, "server_names");
 
-  std::string portsRAW = extract_property(serverChunk, "ports");
-  std::vector<std::string> portsVector = split(portsRAW, ',');
-  std::vector<int>ports;
+  unsigned int maxBody = Extractor::ui(serverChunk, "body_max");
 
-  std::vector<std::string>::iterator portsIterator;
-  for (portsIterator = portsVector.begin(); portsIterator != portsVector.end(); portsIterator++) {
-    std::stringstream ss(*portsIterator);
-    int port;
-    ss >> port;
-    ports.push_back(port);
-  }
+  std::vector<int>ports = Extractor::v_i(serverChunk, "ports");
 
   // TODO: errorNumberToLocation
   std::map<int, std::string> errorNumberToLocation;
-  std::string errorPagesRAW = extract_property(serverChunk, "error_pages");
-  
-  unsigned int maxBody = extract_number_property(serverChunk, "body_max");
 
   std::vector<HttpLocation *> locations;
   HttpLocation *location = this->extractLocation(serverChunk);
@@ -172,13 +135,11 @@ std::string Parser::extractChunk(std::string & content, std::string const & chun
 
 void Parser::readFile () {
   std::ifstream file(this->filePath.c_str());
-  std::stringstream buffer;
-
-  if (file) {
-    buffer << file.rdbuf();
-    this->fileContent = buffer.str();
-  } else {
-    // TODO: throw ERR
-    std::cerr << "Error: Could not open file " << this->filePath << std::endl;
+  if (!file) {
+    throw std::runtime_error("Could not open configuration file '" + this->filePath + "'");
   }
+
+  std::stringstream buffer;
+  buffer << file.rdbuf();
+  this->fileContent = buffer.str();
 }

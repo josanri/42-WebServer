@@ -1,5 +1,5 @@
-#ifndef __PARSER_H__
-# define __PARSER_H__
+#ifndef PARSER_HPP
+# define PARSER_HPP
 
 # include <string>
 # include <vector>
@@ -19,7 +19,7 @@ class Parser {
 
 	public:
 		Parser(std::string const & filename);
-		~Parser(void);
+		~Parser();
 
 		// std::vector<HttpServer *> parse(void);
 		void parse(std::vector<HttpPortListener *> & listeners, std::map<int,HttpPortListener *> & fileDescriptoToPort);

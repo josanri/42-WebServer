@@ -43,12 +43,16 @@ int main(int argc, char **argv)
 {
 	std::vector<HttpPortListener *> portListenerVector;
 	std::map<int,HttpPortListener *> fileDescriptoToPort; // Access in O(log n) instead of O(n)
-	if (argc != 2) {
-		std::cerr << "usage: ./webserv configuration_file" << std::endl;
+	try {
+		if (argc != 2) {
+			throw std::runtime_error("usage: ./webserv configuration_file");
+		}
+		Parser parser(argv[1]);
+		parser.parse(portListenerVector, fileDescriptoToPort);
+	} catch (std::exception & e) {
+		std::cerr << e.what() << std::endl;
 		return (1);
 	}
-	Parser parser(argv[1]);
-	parser.parse(portListenerVector, fileDescriptoToPort);
 	// if (!fake_parse(argv[1], serverVector)) {
 	// 	std::cerr << __func__ << ":" << __LINE__ << ": error while parsing, exiting the program" << std::endl;
 	// 	return (1);
