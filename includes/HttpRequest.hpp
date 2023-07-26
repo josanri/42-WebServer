@@ -27,6 +27,7 @@ class HttpRequest {
 
 	public:
 		HttpRequest();
+		HttpRequest(const HttpRequest &);
 		HttpRequest & operator=(const HttpRequest &);
 		~HttpRequest();
 		void append(std::string & str);
