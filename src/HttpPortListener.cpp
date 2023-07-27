@@ -127,6 +127,8 @@ void HttpPortListener::sendResponse(const int & fd) {
 			httpServer = serverNamesToServer.begin()->second;
 		}
 		HttpResponse response = httpServer->processHttpRequest(readyRequest);
+		response.buildResponse();
+		std::cout << "Response: " << response.getResponse() << std::endl;
 		ssize_t writen = send(fd, response.c_str(), response.size(), 0);
 		if (writen != (ssize_t) response.size()) {
 			std::cerr << "Error when sending the message" << std::endl;

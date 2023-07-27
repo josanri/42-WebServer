@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "HttpServer.hpp"
+#include "ErrorCode.hpp"
 
 HttpServer::HttpServer(void) {
 	this->ports.push_back(8080);
@@ -48,10 +49,17 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
     std::cout << "Processing request " << request.getMethod() << std::endl;
 
     HttpLocation *location = getLocation(request);
-    if (location == NULL) response.setStatusCode(404);
-    else if (!location->isMethodAllowed(request.getMethod())) response.setStatusCode(405);
+    if (location == NULL) {
+        response.setStatusMessage(RESPONSE_CODE__NOT_FOUND);
+        response.setResponse("File not found");
+    }
+    else if (!location->isMethodAllowed(request.getMethod())) {
+        response.setStatusMessage(RESPONSE_CODE__METHOD_NOT_ALLOWED);
+        response.setResponse("Method not allowed");
+    }
     // TODO: Control max size
     else {
+        std::cout << "adios" << std::endl;
         if (request.getMethod() == "GET") {
 			// response = handle_get(request, location);
 		} else if (request.getMethod() == "POST") {
@@ -60,11 +68,12 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
 			response = handle_delete(request);
 		} else if (request.getMethod() == "PUT") {
 			// response = handle_put(request, location);
-		} else response.setStatusCode(405);
+		} else response.setStatusMessage(RESPONSE_CODE__METHOD_NOT_ALLOWED);
     }
 
     response.addHeader("Connection", "close");
-    // TODO: server name to headers
+    response.addHeader("Server", this->serverNames[0]);
+    // TODO: error pages
 
     return response;
 }
@@ -77,12 +86,12 @@ HttpResponse HttpServer::handle_delete(HttpRequest & request) {
     if (path[path.length() - 1] == '/') path = path.substr(0, path.length() - 1);
 
     if (remove(path.c_str()) == 0) {
-        response.setStatusCode(200);
-        std::cout << "File deleted" << std::endl;
+        response.setStatusMessage(RESPONSE_CODE__OK);
+        response.setResponse("File deleted");
     }
     else {
-        response.setStatusCode(404);
-        std::cout << "File not found " << path.c_str() << std::endl;
+        response.setStatusMessage(RESPONSE_CODE__NOT_FOUND);
+        response.setResponse("File not found");
     }
 
     return response;

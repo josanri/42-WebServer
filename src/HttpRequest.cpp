@@ -4,7 +4,7 @@
 #include <cstdlib>
 
 HttpRequest::HttpRequest() {
-
+    this->state = HttpRequest::HEADERS_NOT_FINISHED;
 }
 
 HttpRequest::~HttpRequest() {
@@ -12,7 +12,7 @@ HttpRequest::~HttpRequest() {
 }
 
 HttpRequest::HttpRequest(const HttpRequest & src) {
-    (void)src;
+    *this = src;
 }
 
 void HttpRequest::parseHeadersKeyValue(size_t first_pos, size_t last_pos)
@@ -124,6 +124,14 @@ HttpRequest & HttpRequest::operator=(HttpRequest const&src) {
     if (this != &src)
     {
         this->full_request = src.full_request;
+        this->method = src.method;
+        this->route = src.route;
+        this->httpVersion = src.httpVersion;
+        this->headers = src.headers;
+        this->body = src.body;
+        this->crlfcrlf = src.crlfcrlf;
+        this->contentLength = src.contentLength;
+        this->state = src.state;
     }
     return (*this);
 
