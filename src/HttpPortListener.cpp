@@ -70,6 +70,7 @@ int HttpPortListener::bindServerConnection() {
 	this->address.sin_family = AF_INET;
 	this->address.sin_addr.s_addr = INADDR_ANY;
 	this->address.sin_port = htons(this->getPort());
+	// TODO: Exit when a port is invalid
 	if (bind(server_fd, (struct sockaddr *) &address, sizeof(this->address))) {// Socket to local address
 		std::cerr << __func__ << ":" << __LINE__ << ": error when binding the socket" << std::endl;
 		return (EXIT_FAILURE);
