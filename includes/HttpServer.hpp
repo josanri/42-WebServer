@@ -3,6 +3,10 @@
 
 # include <vector>
 # include <string>
+# include <fstream>
+# include <sys/stat.h>
+# include <dirent.h>
+# include <sstream>
 
 # include "HttpResponse.hpp"
 # include "HttpRequest.hpp"
@@ -22,6 +26,9 @@ class HttpServer
 		HttpResponse handle_put(HttpRequest & request, HttpLocation *location);
 		HttpResponse handle_delete(HttpRequest & request, HttpLocation *location);
 		HttpLocation* getLocation(HttpRequest & request);
+
+		bool isDirectory(const std::string & path);
+		std::string listDirectory(const std::string & path, const std::string & requestRoute);
 
 	public:
 		

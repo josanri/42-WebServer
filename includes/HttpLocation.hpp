@@ -24,6 +24,7 @@ class HttpLocation
 		std::string getRoute() const;
 		std::string getRoot() const;
 		bool isMethodAllowed(std::string method);
+		bool directoryListingAllowed() const;
 
 };
 

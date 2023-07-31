@@ -42,6 +42,10 @@ std::string HttpLocation::getRoot() const {
     return (this->root);
 }
 
+bool HttpLocation::directoryListingAllowed() const {
+    return (this->directoryListing);
+}
+
 bool HttpLocation::isMethodAllowed(std::string method) {
     std::vector<std::string>::iterator it = std::find(this->methods.begin(), this->methods.end(), method);
 

@@ -1,6 +1,4 @@
 #include "HttpResponse.hpp"
-#include <map>
-#include <iostream>
 #include <sstream>
 
 static const struct tm * getTimePointer()
@@ -71,6 +69,7 @@ void HttpResponse::setStatusMessage(std::string statusMessage)
 
 void HttpResponse::buildResponse()
 {
+	if (this->statusMessage.size() == 0) this->setStatusMessage(RESPONSE_CODE__OK);
 	std::string responseWithoutBody = "HTTP/1.1 " + this->statusMessage + "\r\n";
 
 	for (std::map<std::string, std::string>::iterator it = this->headers.begin(); it != this->headers.end(); it++)
