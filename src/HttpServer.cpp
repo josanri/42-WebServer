@@ -14,6 +14,8 @@
 #include "HttpServer.hpp"
 #include "ErrorCode.hpp"
 
+#include "utils.h"
+
 HttpServer::HttpServer(void) {
 	this->ports.push_back(8080);
     this->serverNames.push_back("localhost");
@@ -68,7 +70,7 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
 		} else if (request.getMethod() == "DELETE") {
 			response = handle_delete(request, location);
 		} else if (request.getMethod() == "PUT") {
-			// response = handle_put(request, location);
+			response = handle_put(request, location);
 		} else response.setStatusMessage(RESPONSE_CODE__METHOD_NOT_ALLOWED);
     }
 
@@ -120,6 +122,53 @@ HttpResponse HttpServer::handle_get(HttpRequest & request, HttpLocation *locatio
         response.setStatusMessage(RESPONSE_CODE__OK);
         response.setResponse(content);
     }
+    return response;
+}
+
+HttpResponse HttpServer::handle_put(HttpRequest & request, HttpLocation *location) {
+    HttpResponse response;
+    std::string path = location->getRoot() + request.getRoute();
+
+    if (isDirectory(path)) {
+        response.setStatusMessage(RESPONSE_CODE__BAD_REQUEST);
+        response.setResponse("Route is a directory");
+
+        return response;
+    }
+
+    std::vector<std::string> folders = split(path, '/');
+
+    std::string folder = "";
+    for (std::vector<std::string>::iterator it = folders.begin(); it != folders.end() - 1; it++) {
+        folder += *it + "/";
+        if (!exists(folder)) {
+            if (mkdir(folder.c_str(), 0777) == -1) {
+                response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
+                response.setResponse("Error creating folder");
+                return response;
+            }
+        }
+        else if (!isDirectory(folder)) {
+            response.setStatusMessage(RESPONSE_CODE__BAD_REQUEST);
+            response.setResponse("Route is a file");
+            return response;
+        }
+    }
+
+    std::ofstream file(path.c_str());
+    if (!file.good()) {
+        response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
+        response.setResponse("Error creating file");
+        return response;
+    }
+
+    // TODO: get body
+    file << "<h1>Hola</h1>";
+    file.close();
+
+    response.setStatusMessage(RESPONSE_CODE__CREATED);
+    response.setResponse("File created");
+
     return response;
 }
 
@@ -175,6 +224,11 @@ HttpLocation* HttpServer::getLocation(HttpRequest & request) {
     }
 
     return location;
+}
+
+bool HttpServer::exists(const std::string & path) {
+    struct stat path_stat;
+    return (stat(path.c_str(), &path_stat) == 0);
 }
 
 bool HttpServer::isDirectory(const std::string & path) {

@@ -27,6 +27,7 @@ class HttpServer
 		HttpResponse handle_delete(HttpRequest & request, HttpLocation *location);
 		HttpLocation* getLocation(HttpRequest & request);
 
+		bool exists(const std::string & path);
 		bool isDirectory(const std::string & path);
 		std::string listDirectory(const std::string & path, const std::string & requestRoute);
 
