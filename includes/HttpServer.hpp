@@ -17,10 +17,10 @@ class HttpServer
 		std::map<int, std::string> errorNumberToLocation;
 		unsigned int maxBody;
 
-		HttpResponse handle_get(HttpRequest & request);
-		HttpResponse handle_post(HttpRequest & request);
-		HttpResponse handle_put(HttpRequest & request);
-		HttpResponse handle_delete(HttpRequest & request);
+		HttpResponse handle_get(HttpRequest & request, HttpLocation *location);
+		HttpResponse handle_post(HttpRequest & request, HttpLocation *location);
+		HttpResponse handle_put(HttpRequest & request, HttpLocation *location);
+		HttpResponse handle_delete(HttpRequest & request, HttpLocation *location);
 		HttpLocation* getLocation(HttpRequest & request);
 
 	public:

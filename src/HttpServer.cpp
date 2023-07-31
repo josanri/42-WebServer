@@ -48,6 +48,7 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
     HttpResponse response;
     std::cout << "Processing request " << request.getMethod() << std::endl;
 
+    // TODO: Check in parser that root cannot be empty
     HttpLocation *location = getLocation(request);
     if (location == NULL) {
         response.setStatusMessage(RESPONSE_CODE__NOT_FOUND);
@@ -65,7 +66,7 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
 		} else if (request.getMethod() == "POST") {
 			// response = handle_post(request, location);
 		} else if (request.getMethod() == "DELETE") {
-			response = handle_delete(request);
+			response = handle_delete(request, location);
 		} else if (request.getMethod() == "PUT") {
 			// response = handle_put(request, location);
 		} else response.setStatusMessage(RESPONSE_CODE__METHOD_NOT_ALLOWED);
@@ -79,11 +80,9 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
 }
 
 
-HttpResponse HttpServer::handle_delete(HttpRequest & request) {
+HttpResponse HttpServer::handle_delete(HttpRequest & request, HttpLocation *location) {
     HttpResponse response;
-    std::string path = '.' + request.getRoute();
-
-    if (path[path.length() - 1] == '/') path = path.substr(0, path.length() - 1);
+    std::string path = location->getRoot() + request.getRoute();
 
     if (remove(path.c_str()) == 0) {
         response.setStatusMessage(RESPONSE_CODE__OK);
@@ -115,14 +114,19 @@ HttpLocation* HttpServer::getLocation(HttpRequest & request) {
     std::string subStringRoute;
     HttpLocation *location;
     std::string locationRoute;
+    int locationRouteLength;
 
     location = NULL;
     for (std::vector<HttpLocation *>::iterator it = this->locations.begin(); it != this->locations.end() && location == NULL; it++) {
         locationRoute = (*it)->getRoute();
+        locationRouteLength = locationRoute.size();
+
+        if (locationRoute[locationRouteLength - 1] == '/') {
+            locationRoute = locationRoute.substr(0, locationRouteLength - 1);
+            locationRouteLength--;
+        }
     
-        if (locationRoute[0] == '.') locationRoute = locationRoute.substr(1);
-        if (locationRoute[locationRoute.length() - 1] == '/') locationRoute = locationRoute.substr(0, locationRoute.length() - 1);
-        subStringRoute = route.substr(0, locationRoute.length());
+        subStringRoute = route.substr(0, locationRouteLength);
 
         if (locationRoute.compare(subStringRoute) == 0 && location == NULL) location = *it;
     }
