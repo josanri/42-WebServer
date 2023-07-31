@@ -19,7 +19,8 @@ HttpLocation::HttpLocation(void) {
 	this->upload = false;
 }
 
-HttpLocation::HttpLocation(std::string route, std::vector<std::string> & methods, std::string defaultFile, std::string redirectionRoute, std::map<std::string, std::string> & fileExtensionToCGI, bool directoryListing, bool upload) {
+HttpLocation::HttpLocation(std::string root, std::string route, std::vector<std::string> & methods, std::string defaultFile, std::string redirectionRoute, std::map<std::string, std::string> & fileExtensionToCGI, bool directoryListing, bool upload) {
+    this->root = root;
     this->route = route;
     this->methods = methods;
     this->defaultFile = defaultFile;
@@ -35,6 +36,10 @@ HttpLocation::~HttpLocation() {
 
 std::string HttpLocation::getRoute() const {
     return (this->route);
+}
+
+std::string HttpLocation::getRoot() const {
+    return (this->root);
 }
 
 bool HttpLocation::isMethodAllowed(std::string method) {

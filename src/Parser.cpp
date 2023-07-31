@@ -80,6 +80,7 @@ HttpLocation * Parser::extractLocation(std::string & serverChunk) {
     return NULL;
   }
   std::string route = extract_property(locationChunk, "route");
+  std::string root = extract_property(locationChunk, "root");
   std::string methods = extract_property(locationChunk, "methods");
   std::string redirection = extract_property(locationChunk, "redirection");
   std::string defaultFile = extract_property(locationChunk, "default_file");
@@ -96,7 +97,7 @@ HttpLocation * Parser::extractLocation(std::string & serverChunk) {
   // TODO: next line
   std::map<std::string, std::string> cgiFileExtensionMap;
 
-  HttpLocation *location = new HttpLocation(route, methodsVector, defaultFile, redirection, cgiFileExtensionMap, directoryListingBool, uploadBool);
+  HttpLocation *location = new HttpLocation(root, route, methodsVector, defaultFile, redirection, cgiFileExtensionMap, directoryListingBool, uploadBool);
 
   return location;
 }
