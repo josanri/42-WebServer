@@ -3,6 +3,7 @@
 
 # include <map>
 # include <iostream>
+# include <cstdlib>
 
 # include "ErrorCode.hpp"
 

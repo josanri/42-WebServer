@@ -125,6 +125,11 @@ std::string HttpRequest::getBody()
     return this->body;
 }
 
+size_t HttpRequest::getContentLength()
+{
+    return this->contentLength;
+}
+
 HttpRequest & HttpRequest::operator=(HttpRequest const&src) {
     if (this != &src)
     {

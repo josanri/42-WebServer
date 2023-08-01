@@ -50,7 +50,6 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
     HttpResponse response;
     std::cout << "Processing request " << request.getMethod() << std::endl;
 
-    // TODO: Check in parser that root cannot be empty
     HttpLocation *location = getLocation(request);
     if (location == NULL) {
         response.setStatusMessage(RESPONSE_CODE__NOT_FOUND);
@@ -60,7 +59,10 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
         response.setStatusMessage(RESPONSE_CODE__METHOD_NOT_ALLOWED);
         response.setResponse("Method not allowed");
     }
-    // TODO: Control max size
+    else if (request.getContentLength() > this->maxBody) {
+        response.setStatusMessage(RESPONSE_CODE__PAYLOAD_TOO_LARGE);
+        response.setResponse("Payload too large");
+    }
     else {
         std::cout << "adios" << std::endl;
         if (request.getMethod() == "GET") {
@@ -76,7 +78,6 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
 
     response.addHeader("Connection", "close");
     response.addHeader("Server", this->serverNames[0]);
-    // TODO: error pages
 
     return response;
 }
