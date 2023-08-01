@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -47,7 +48,17 @@ void Parser::parse(std::vector<HttpPortListener *> & listeners, std::map<int,Htt
     int port = portToServerIterator->first;
     std::vector<HttpServer *> servers = portToServerIterator->second;
     HttpPortListener *listener = new HttpPortListener(port, fileDescriptoToPort, servers);
-    listener->initializeSocket();
+    try {
+      listener->initializeSocket();
+    } catch (std::exception & e) {
+      for (std::vector<HttpPortListener *>::iterator listenersIterator = listeners.begin();
+        listenersIterator != listeners.end();
+        listenersIterator++) {
+        close((*listenersIterator)->getServerFd());
+        delete *listenersIterator;
+      }
+      throw std::runtime_error("Error while initializing sockets");
+    }
     listeners.push_back(listener);
   }
 }
