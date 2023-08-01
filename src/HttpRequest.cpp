@@ -27,8 +27,8 @@ void HttpRequest::parseHeadersKeyValue(size_t first_pos, size_t last_pos)
     } else {
         key = this->full_request.substr(first_pos, second_pos - first_pos);
         value = this->full_request.substr(second_pos + 2, last_pos - second_pos - 2);
-        if (key == "Content Length") {
-            this->contentLength = 0; //atoi(value.c_str());
+        if (key == "Content-Length") {
+            this->contentLength = atoi(value.c_str());
         } else {
             this->headers[key] = value;
         }
@@ -118,6 +118,11 @@ std::string HttpRequest::getMethod()
 std::string HttpRequest::getRoute()
 {
     return this->route;
+}
+
+std::string HttpRequest::getBody()
+{
+    return this->body;
 }
 
 HttpRequest & HttpRequest::operator=(HttpRequest const&src) {

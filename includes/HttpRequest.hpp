@@ -35,6 +35,7 @@ class HttpRequest {
 		std::string getMethod();
 		std::string getRoute();
 		std::string getHost();
+		std::string getBody();
 
 };
 

@@ -162,8 +162,7 @@ HttpResponse HttpServer::handle_put(HttpRequest & request, HttpLocation *locatio
         return response;
     }
 
-    // TODO: get body
-    file << "<h1>Hola</h1>";
+    file << request.getBody();
     file.close();
 
     response.setStatusMessage(RESPONSE_CODE__CREATED);
