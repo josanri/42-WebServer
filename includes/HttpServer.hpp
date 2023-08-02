@@ -41,6 +41,7 @@ class HttpServer
 		const std::vector<std::string> & getServerNames() const;
 		const std::vector<int> & getPorts() const;
 		std::vector<HttpLocation *> getLocations();
+		const std::map<int, std::string> & getErrorNumberToLocation() const;
 
 
 };

@@ -4,6 +4,7 @@
 # include <map>
 # include <iostream>
 # include <cstdlib>
+# include <fstream>
 
 # include "ErrorCode.hpp"
 
@@ -25,7 +26,7 @@ class HttpResponse
 		void setStatusMessage(std::string statusMessage);
 		std::string getResponse() const;
 		void setResponse(std::string response);
-		void buildResponse();
+		void buildResponse(std::map<int, std::string> errorNumberToLocation);
 
 };
 

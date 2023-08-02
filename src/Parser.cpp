@@ -81,7 +81,7 @@ HttpLocation * Parser::extractLocation(std::string & serverChunk) {
   bool directoryListing = Extractor::b(locationChunk, "directory_listing");
 
   // TODO: cgiFileExtensionMap
-  std::map<std::string, std::string> cgiFileExtensionMap;
+  std::map<std::string, std::string> cgiFileExtensionMap = Extractor::m_str_str(locationChunk, "cgi");
 
   HttpLocation *location = new HttpLocation(root, route, methods, defaultFile, redirection, cgiFileExtensionMap, directoryListing, upload);
 
@@ -100,8 +100,7 @@ HttpServer * Parser::extractServer() {
 
   std::vector<int>ports = Extractor::v_i(serverChunk, "ports");
 
-  // TODO: errorNumberToLocation
-  std::map<int, std::string> errorNumberToLocation;
+  std::map<int, std::string> errorNumberToLocation = Extractor::m_i_str(serverChunk, "error_pages");
 
   std::vector<HttpLocation *> locations;
   HttpLocation *location = this->extractLocation(serverChunk);
@@ -121,25 +120,50 @@ std::string Parser::extractChunk(std::string & content, std::string const & chun
   std::string chunk_end = "}";
 
   std::size_t start = content.find(chunk_start);
-  if (start != std::string::npos) {
-    start += chunk_start.length();
-    std::size_t end = content.find(chunk_end, start);
-    if (end == std::string::npos) {
-      return "";
-    }
-    chunk = content.substr(start, end - start);
-    if (chunk.find("={") != std::string::npos) {
-      end = content.find(chunk_end, end + 1);
-      if (end == std::string::npos) {
-        return "";
-      }
-      chunk = content.substr(start, end - start);
-    }
-    content = content.substr(start, content.length() - end);
+  if (start == std::string::npos) {
+    return "";
   }
 
-  // TODO: throw ERR if empty
+  start += chunk_start.length();
 
+  std::size_t current_position = start;
+  std::size_t end = 0;
+  std::size_t inner_start;
+  std::size_t inner_end;
+
+  // Handle nested chunks. The inner chunk must be closed before the outer chunk. There can be multiple inner chunks in each inner and outer chunk.
+  std::size_t open_brackets = 0;
+  do {
+    inner_start = content.find("={", current_position);
+    if (inner_start != std::string::npos) {
+      open_brackets++;
+      current_position = inner_start + 2;
+    }
+  } while (inner_start != std::string::npos && inner_start < content.length());
+
+  current_position = start;
+  while (open_brackets > 0 && current_position < content.length()) {
+    inner_end = content.find(chunk_end, current_position);
+    if (inner_end != std::string::npos) {
+      open_brackets--;
+      current_position = inner_end + chunk_end.length();
+    }
+  }
+
+  if (open_brackets > 0) {
+    return "";
+  }
+
+  end = content.find(chunk_end, current_position);
+
+  if (end == std::string::npos) {
+    return "";
+  }
+
+  chunk = content.substr(start, end - start);
+  trim(chunk);
+
+  content = content.substr(start, content.length() - end);
   return chunk;
 }
 

@@ -19,6 +19,8 @@ class Extractor {
 		static std::vector<std::string> v_str(std::string & text, std::string const & property);
 		static std::vector<int> v_i(std::string & text, std::string const & property);
 	
+		static std::map<std::string, std::string> m_str_str(std::string & text, std::string const & property);
+		static std::map<int, std::string> m_i_str(std::string & text, std::string const & property);
 	private:
 		Extractor(Extractor const & src);
 		Extractor & operator=(Extractor const & rhs);
