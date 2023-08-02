@@ -200,6 +200,10 @@ std::vector<HttpLocation *> HttpServer::getLocations() {
     return (this->locations);
 }
 
+const std::map<int, std::string> & HttpServer::getErrorNumberToLocation() const {
+    return (this->errorNumberToLocation);
+}
+
 
 HttpLocation* HttpServer::getLocation(HttpRequest & request) {
     std::string route = request.getRoute();
