@@ -80,7 +80,6 @@ HttpLocation * Parser::extractLocation(std::string & serverChunk) {
   bool upload = Extractor::b(locationChunk, "upload");
   bool directoryListing = Extractor::b(locationChunk, "directory_listing");
 
-  // TODO: cgiFileExtensionMap
   std::map<std::string, std::string> cgiFileExtensionMap = Extractor::m_str_str(locationChunk, "cgi");
 
   HttpLocation *location = new HttpLocation(root, route, methods, defaultFile, redirection, cgiFileExtensionMap, directoryListing, upload);
