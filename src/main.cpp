@@ -14,9 +14,9 @@
 
 #define POLL_TIMEOUT 1000
 
-int getNumberOfFds(std::vector<HttpPortListener *> vector) {
+int getNumberOfFds(std::vector<HttpPortListener *> const & vector) {
 	int acc_size = 0;
-	for (std::vector<HttpPortListener *>::iterator it = vector.begin(); it !=  vector.end(); it++)
+	for (std::vector<HttpPortListener *>::const_iterator it = vector.begin(); it !=  vector.end(); it++)
 	{
 		acc_size += (*it)->getOpenFileDescriptors().size();
 	}

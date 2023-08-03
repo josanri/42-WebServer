@@ -5,6 +5,7 @@
 
 HttpRequest::HttpRequest() {
     this->state = HttpRequest::HEADERS_NOT_FINISHED;
+    this->contentLength = 0;
 }
 
 HttpRequest::~HttpRequest() {
