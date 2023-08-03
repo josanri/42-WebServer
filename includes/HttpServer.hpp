@@ -26,6 +26,7 @@ class HttpServer
 		HttpResponse handle_put(HttpRequest & request, HttpLocation *location);
 		HttpResponse handle_delete(HttpRequest & request, HttpLocation *location);
 		HttpLocation* getLocation(HttpRequest & request);
+		HttpResponse cgi (HttpRequest & request, std::string & path, std::string & cgiPath);
 
 		bool exists(const std::string & path);
 		bool isDirectory(const std::string & path);

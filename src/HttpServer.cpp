@@ -117,10 +117,15 @@ HttpResponse HttpServer::handle_get(HttpRequest & request, HttpLocation *locatio
 
         std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         
-        // TODO: CGIs
+        std::string extension = path.substr(path.find_last_of(".") + 1);
+        std::string cgiPath = location->getCgi(extension);
+        if (isEmpty(extension) || isEmpty(cgiPath)) {
+            response.setStatusMessage(RESPONSE_CODE__OK);
+            response.setResponse(content);
+            return response;
+        }
 
-        response.setStatusMessage(RESPONSE_CODE__OK);
-        response.setResponse(content);
+        response = cgi(request, path, cgiPath);
     }
     return response;
 }
@@ -143,108 +148,7 @@ HttpResponse HttpServer::handle_post(HttpRequest & request, HttpLocation *locati
         return response;
     }
 
-    if (!exists(cgiPath)) {
-        response.setStatusMessage(RESPONSE_CODE__NOT_FOUND);
-        response.setResponse("CGI not found");
-        return response;
-    }
-
-    std::string body = request.getBody();
-
-    int ctpfd[2];
-    int ptcfd[2];
-    if (pipe(ctpfd) == -1) {
-        response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
-        response.setResponse("Error creating pipe");
-        return response;
-    }
-    if (pipe(ptcfd) == -1) {
-        response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
-        response.setResponse("Error creating pipe");
-        return response;
-    }
-
-    pid_t pid = fork();
-    if (pid == -1) {
-        response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
-        response.setResponse("Error forking");
-        return response;
-    }
-
-        std::vector<std::string> args = split(cgiPath, ' ');
-        std::string cgi = args[0];
-
-        char *argv[args.size() + 2];
-        argv[args.size()] = (char *)path.c_str();
-        argv[args.size() + 1] = NULL;
-        for (unsigned int i = 0; i < args.size(); i++) {
-            argv[i] = (char *)args[i].c_str();
-        }
-        // TODO: remove line
-        (void)argv;
-
-
-    if (pid == 0) {
-        close(ctpfd[0]);
-        close(ptcfd[1]);
-        dup2(ctpfd[1], STDOUT_FILENO);
-        dup2(ptcfd[0], STDIN_FILENO);
-
-        // TODO: set correct headers https://en.wikipedia.org/wiki/Common_Gateway_Interface
-        char *envp[] = {
-            // TODO: CONTENT_LENGTH matters
-            (char *)"CONTENT_LENGTH=13",
-            (char *)"CONTENT_TYPE=application/x-www-form-urlencoded",
-            (char *)"GATEWAY_INTERFACE=CGI/1.1",
-            (char *)"PATH_INFO=/",
-            (char *)"PATH_TRANSLATED=/",
-            (char *)"QUERY_STRING=",
-            (char *)"REMOTE_ADDR=",
-            (char *)"REMOTE_IDENT=",
-            (char *)"REMOTE_USER=",
-            (char *)"REQUEST_METHOD=POST",
-            (char *)"REQUEST_URI=",
-            (char *)"SCRIPT_NAME=",
-            (char *)"SERVER_NAME=",
-            (char *)"SERVER_PORT=",
-            (char *)"SERVER_PROTOCOL=HTTP/1.1",
-            (char *)"SERVER_SOFTWARE=webserv",
-            NULL
-        };
-
-        if (execve(cgi.c_str(), argv, envp) == -1) {
-            std::cerr << "Error executing CGI" << std::endl;
-            exit(1);
-        }
-
-        exit(0);
-    }
-
-    close(ctpfd[1]);
-    close(ptcfd[0]);
-
-    // TODO: change line when body is working
-    // write(ptcfd[1], body.c_str(), body.size());
-    write(ptcfd[1], (char *)"num1=1&num2=2", 14);
-    close(ptcfd[1]);
-
-    // TODO: improve reading method
-    char buffer[1024];
-    std::string responseContent = "";
-    int bytesRead;
-
-    while ((bytesRead = read(ctpfd[0], buffer, 1023)) > 0) {
-        buffer[bytesRead] = '\0';
-        responseContent += buffer;
-    }
-
-    close(ctpfd[0]);
-
-    response.setStatusMessage(RESPONSE_CODE__OK);
-    // TODO: In CGI result: before breakline, values are headers. After breakline, value is body
-    response.setResponse(responseContent);
-
-    return response;
+    return cgi(request, path, cgiPath);
 }
 
 HttpResponse HttpServer::handle_put(HttpRequest & request, HttpLocation *location) {
@@ -419,4 +323,109 @@ std::string HttpServer::listDirectory(const std::string & path, const std::strin
     }
 
     return content;
+}
+
+HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::string & cgiPath) {
+    HttpResponse response;
+    std::string body = request.getBody();
+
+    if (!exists(cgiPath)) {
+        response.setStatusMessage(RESPONSE_CODE__NOT_FOUND);
+        response.setResponse("CGI not found");
+        return response;
+    }
+
+    int ctpfd[2];
+    int ptcfd[2];
+    if (pipe(ctpfd) == -1) {
+        response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
+        response.setResponse("Error creating pipe");
+        return response;
+    }
+    if (pipe(ptcfd) == -1) {
+        response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
+        response.setResponse("Error creating pipe");
+        return response;
+    }
+
+    pid_t pid = fork();
+    if (pid == -1) {
+        response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
+        response.setResponse("Error forking");
+        return response;
+    }
+
+        std::vector<std::string> args = split(cgiPath, ' ');
+        std::string cgi = args[0];
+
+        char *argv[args.size() + 2];
+        argv[args.size()] = (char *)path.c_str();
+        argv[args.size() + 1] = NULL;
+        for (unsigned int i = 0; i < args.size(); i++) {
+            argv[i] = (char *)args[i].c_str();
+        }
+
+    int bodySize = body.size();
+
+    if (pid == 0) {
+        close(ctpfd[0]);
+        close(ptcfd[1]);
+        dup2(ctpfd[1], STDOUT_FILENO);
+        dup2(ptcfd[0], STDIN_FILENO);
+
+        std::stringstream ss;
+        ss << bodySize;
+        std::string contentLength = "CONTENT_LENGTH=" + ss.str();
+        // TODO: set correct headers https://en.wikipedia.org/wiki/Common_Gateway_Interface
+        char *envp[] = {
+            (char *)contentLength.c_str(),
+            (char *)"CONTENT_TYPE=application/x-www-form-urlencoded",
+            (char *)"GATEWAY_INTERFACE=CGI/1.1",
+            (char *)"PATH_INFO=/",
+            (char *)"PATH_TRANSLATED=/",
+            (char *)"QUERY_STRING=",
+            (char *)"REMOTE_ADDR=",
+            (char *)"REMOTE_IDENT=",
+            (char *)"REMOTE_USER=",
+            (char *)"REQUEST_METHOD=POST",
+            (char *)"REQUEST_URI=",
+            (char *)"SCRIPT_NAME=",
+            (char *)"SERVER_NAME=",
+            (char *)"SERVER_PORT=",
+            (char *)"SERVER_PROTOCOL=HTTP/1.1",
+            (char *)"SERVER_SOFTWARE=webserv",
+            NULL
+        };
+
+        if (execve(cgi.c_str(), argv, envp) == -1) {
+            std::cerr << "Error executing CGI" << std::endl;
+            exit(1);
+        }
+
+        exit(0);
+    }
+
+    close(ctpfd[1]);
+    close(ptcfd[0]);
+
+    write(ptcfd[1], body.c_str(), bodySize);
+    close(ptcfd[1]);
+
+    // TODO: improve reading method
+    char buffer[1024];
+    std::string responseContent = "";
+    int bytesRead;
+
+    while ((bytesRead = read(ctpfd[0], buffer, 1023)) > 0) {
+        buffer[bytesRead] = '\0';
+        responseContent += buffer;
+    }
+
+    close(ctpfd[0]);
+
+    response.setStatusMessage(RESPONSE_CODE__OK);
+    std::string responseWithoutHeaders = responseContent.substr(responseContent.find("\r\n\r\n") + 4);
+    response.setResponse(responseWithoutHeaders);
+
+    return response;
 }
