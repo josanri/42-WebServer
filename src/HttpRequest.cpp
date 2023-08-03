@@ -5,6 +5,7 @@
 
 HttpRequest::HttpRequest() {
     this->state = HttpRequest::HEADERS_NOT_FINISHED;
+    this->contentLength = 0;
 }
 
 HttpRequest::~HttpRequest() {
@@ -99,28 +100,31 @@ void HttpRequest::append(std::string & str)
     if (this->state == HttpRequest::BODY_NOT_FINISHED) {
         // Count the length of the body according to the content length
         if (this->full_request.size() == this->contentLength + this->crlfcrlf + 4)
+        {
             this->state = HttpRequest::FINISHED;
+            this->body = this->full_request.substr(this->crlfcrlf + 4);
+        }
         else if (this->full_request.size() > this->contentLength + this->crlfcrlf + 4)
             this->state = HttpRequest::ERROR; // Content length larger
     }
 }
 
-std::string HttpRequest::getHost()
+const std::string & HttpRequest::getHost()
 {
     return this->headers["Host"];
 }
 
-std::string HttpRequest::getMethod()
+const std::string & HttpRequest::getMethod()
 {
     return this->method;
 }
 
-std::string HttpRequest::getRoute()
+const std::string & HttpRequest::getRoute()
 {
     return this->route;
 }
 
-std::string HttpRequest::getBody()
+const std::string & HttpRequest::getBody()
 {
     return this->body;
 }

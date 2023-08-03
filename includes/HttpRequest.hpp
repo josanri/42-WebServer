@@ -32,10 +32,10 @@ class HttpRequest {
 		~HttpRequest();
 		void append(std::string & str);
 		void parseHeaders();
-		std::string getMethod();
-		std::string getRoute();
-		std::string getHost();
-		std::string getBody();
+		const std::string & getMethod();
+		const std::string & getRoute();
+		const std::string & getHost();
+		const std::string & getBody();
 		size_t getContentLength();
 
 };
