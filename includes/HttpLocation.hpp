@@ -23,6 +23,7 @@ class HttpLocation
 		~HttpLocation(void);
 		std::string getRoute() const;
 		std::string getRoot() const;
+		std::string getCgi(std::string extension) const;
 		bool isMethodAllowed(std::string method);
 		bool directoryListingAllowed() const;
 

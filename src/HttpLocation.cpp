@@ -42,6 +42,16 @@ std::string HttpLocation::getRoot() const {
     return (this->root);
 }
 
+std::string HttpLocation::getCgi(std::string extension) const {
+    std::map<std::string, std::string>::const_iterator it = this->fileExtensionToCGI.find(extension);
+
+    if (it == this->fileExtensionToCGI.end()) {
+        return ("");
+    }
+
+    return (it->second);
+}
+
 bool HttpLocation::directoryListingAllowed() const {
     return (this->directoryListing);
 }
