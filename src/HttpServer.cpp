@@ -378,29 +378,31 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
         std::stringstream ss;
         ss << bodySize;
         std::string contentLength = "CONTENT_LENGTH=" + ss.str();
-        // TODO: set correct headers https://en.wikipedia.org/wiki/Common_Gateway_Interface
-        char *envp[] = {
-            (char *)contentLength.c_str(),
-            (char *)"CONTENT_TYPE=application/x-www-form-urlencoded",
-            (char *)"GATEWAY_INTERFACE=CGI/1.1",
-            (char *)"PATH_INFO=/",
-            (char *)"PATH_TRANSLATED=/",
-            (char *)"QUERY_STRING=",
-            (char *)"REMOTE_ADDR=",
-            (char *)"REMOTE_IDENT=",
-            (char *)"REMOTE_USER=",
-            (char *)"REQUEST_METHOD=POST",
-            (char *)"REQUEST_URI=",
-            (char *)"SCRIPT_NAME=",
-            (char *)"SERVER_NAME=",
-            (char *)"SERVER_PORT=",
-            (char *)"SERVER_PROTOCOL=HTTP/1.1",
-            (char *)"SERVER_SOFTWARE=webserv",
-            NULL
-        };
+        std::string pathInfo = "PATH_INFO=" + request.getRoute();
+        std::string requestMethod = "REQUEST_METHOD=" + request.getMethod();
+        char **envp = new char*[5 + request.getHeaders().size()];
+        
+        int i = 0;
+        envp[i++] = (char *)contentLength.c_str();
+        envp[i++] = (char *)pathInfo.c_str();
+        envp[i++] = (char *)requestMethod.c_str();
+        envp[i++] = (char *)"SERVER_PROTOCOL=HTTP/1.1";
+
+        // Iterate over headers of request and add to envp
+        std::map<std::string, std::string> headers = request.getHeaders();
+        for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it) {
+            std::string header = it->first;
+            std::string value = it->second;
+            std::string env = header + "=" + value;
+            std::string str = "HTTP_";
+            envp[i++] = (char *)(str + env).c_str();
+        }
+
+        envp[i] = NULL;
 
         if (execve(cgi.c_str(), argv, envp) == -1) {
             std::cerr << "Error executing CGI" << std::endl;
+            delete[] envp;
             exit(1);
         }
 
