@@ -1,0 +1,4 @@
+- Default file
+- Check cgi not a map
+- HTTP Redirection
+- Method not allowed
