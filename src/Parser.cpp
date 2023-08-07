@@ -20,28 +20,38 @@ void Parser::parse(std::vector<HttpPortListener *> & listeners, std::map<int,Htt
   
   do {
     HttpServer *server = this->extractServer();
-    if (server != NULL) {
-      std::vector<int>::iterator portsIterator;
-      std::vector<int> ports = server->getPorts();
-      for (portsIterator = ports.begin(); portsIterator != ports.end(); portsIterator++) {
-        int port = *portsIterator;
-
-        std::map<int,std::vector<HttpServer *> >::iterator portToServerIterator = portToServer.find(port);
-
-        if (portToServerIterator == portToServer.end()) {
-          std::vector<HttpServer *> servers;
-          servers.push_back(server);
-          portToServer[port] = servers;
-        } else {
-          portToServerIterator->second.push_back(server);
+    if (!server) {
+      for (std::map<int,std::vector<HttpServer *> >::iterator portToServerIterator = portToServer.begin(); portToServerIterator != portToServer.end(); portToServerIterator++) {
+        std::vector<HttpServer *> servers = portToServerIterator->second;
+        for (std::vector<HttpServer *>::iterator serversIterator = servers.begin(); serversIterator != servers.end(); serversIterator++) {
+          delete *serversIterator;
+          // TODO: locations should be free in server destructor
         }
       }
-    } else {
-      // Free memory
-      std::cerr << "Error: Could not parse server" << std::endl;
-      return;
+
+      throw std::runtime_error("Error while parsing configuration file");
+    }
+
+    std::vector<int> ports = server->getPorts();
+    for (std::vector<int>::iterator portsIterator = ports.begin(); portsIterator != ports.end(); portsIterator++) {
+      int port = *portsIterator;
+
+      std::map<int,std::vector<HttpServer *> >::iterator portToServerIterator = portToServer.find(port);
+
+      if (portToServerIterator == portToServer.end()) {
+        std::vector<HttpServer *> servers;
+        servers.push_back(server);
+        portToServer[port] = servers;
+      } else {
+        portToServerIterator->second.push_back(server);
+      }
     }
   } while (!isEmpty(this->fileContent));
+
+  if (portToServer.size() == 0) {
+    std::cerr << "Error: No server found" << std::endl;
+    return;
+  }
 
   std::map<int,std::vector<HttpServer *> >::iterator portToServerIterator;
   for (portToServerIterator = portToServer.begin(); portToServerIterator != portToServer.end(); portToServerIterator++) {
@@ -51,6 +61,7 @@ void Parser::parse(std::vector<HttpPortListener *> & listeners, std::map<int,Htt
     try {
       listener->initializeSocket();
     } catch (std::exception & e) {
+      // TODO: Free memory
       for (std::vector<HttpPortListener *>::iterator listenersIterator = listeners.begin();
         listenersIterator != listeners.end();
         listenersIterator++) {
@@ -106,12 +117,22 @@ HttpServer * Parser::extractServer() {
   std::map<int, std::string> errorNumberToLocation = Extractor::m_i_str(serverChunk, "error_pages");
 
   std::vector<HttpLocation *> locations;
-  HttpLocation *location = this->extractLocation(serverChunk);
   do {
-    locations.push_back(location);
-    location = this->extractLocation(serverChunk);
-  } while (location != NULL);
+    HttpLocation *location = this->extractLocation(serverChunk);
+    if (!location) {
+      for (std::vector<HttpLocation *>::iterator locationsIterator = locations.begin(); locationsIterator != locations.end(); locationsIterator++) {
+        delete *locationsIterator;
+      }
+      return NULL;
+    }
 
+    locations.push_back(location);
+  } while (!isEmpty(serverChunk));
+
+  if (locations.size() == 0) {
+    std::cerr << "Error: No location found" << std::endl;
+    return NULL;
+  }
   HttpServer *server = new HttpServer(ports, serverNames, locations, errorNumberToLocation);
 
   return server;
@@ -166,12 +187,17 @@ std::string Parser::extractChunk(std::string & content, std::string const & chun
   chunk = content.substr(start, end - start);
   trim(chunk);
 
-  content = content.substr(start, content.length() - end);
+  content = content.substr(0, start - chunk_start.length()) + content.substr(end + chunk_end.length());
   return chunk;
 }
 
 
 void Parser::readFile () {
+  std::string file_extension = this->filePath.substr(this->filePath.find_last_of(".") + 1);
+  if (file_extension != "cfg") {
+    throw std::runtime_error("Configuration file must have the .cfg extension");
+  }
+
   std::ifstream file(this->filePath.c_str());
   if (!file) {
     throw std::runtime_error("Could not open configuration file '" + this->filePath + "'");
@@ -180,4 +206,6 @@ void Parser::readFile () {
   std::stringstream buffer;
   buffer << file.rdbuf();
   this->fileContent = buffer.str();
+
+  file.close();
 }
