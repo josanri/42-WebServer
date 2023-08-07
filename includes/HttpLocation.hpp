@@ -25,6 +25,7 @@ class HttpLocation
 		std::string getRoot() const;
 		std::string getCgi(std::string extension) const;
 		std::string getDefaultFile() const;
+		std::string getRedirectionRoute() const;
 		bool isMethodAllowed(std::string method);
 		bool directoryListingAllowed() const;
 

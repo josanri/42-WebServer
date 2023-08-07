@@ -51,7 +51,11 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
     std::cout << "Processing request " << request.getMethod() << std::endl;
 
     HttpLocation *location = getLocation(request);
-    if (location == NULL) {
+    if (location != NULL && location->getRedirectionRoute() != "" && location->getRedirectionRoute() != request.getRoute()) {
+        response.setStatusMessage(RESPONSE_CODE__FOUND);
+        response.addHeader("Location", location->getRedirectionRoute());
+        response.setResponse("");
+    } else if (location == NULL) {
         response.setStatusMessage(RESPONSE_CODE__NOT_FOUND);
         response.setResponse("File not found");
     }
