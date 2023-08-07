@@ -72,7 +72,12 @@ HttpLocation * Parser::extractLocation(std::string & serverChunk) {
 
   std::string root = Extractor::str(locationChunk, "root");
   std::string route = Extractor::str(locationChunk, "route");
-  std::string redirection = Extractor::str(locationChunk, "redirection");
+  std::string redirection;
+  try{
+     redirection = Extractor::str(locationChunk, "redirection");
+  } catch (std::runtime_error & e) { 
+    redirection = "";
+  }
   std::string defaultFile = Extractor::str(locationChunk, "default_file");
   unsigned int maxBody = Extractor::ui(locationChunk, "body_max");
 
