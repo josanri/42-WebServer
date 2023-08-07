@@ -120,6 +120,8 @@ void HttpPortListener::initializeServerNamesToServer(const std::vector<HttpServe
 void HttpPortListener::sendResponse(const int & fd) {
 	if (this->fileDescriptorToRequest.find(fd) != this->fileDescriptorToRequest.end()) {
 		HttpRequest & readyRequest = this->fileDescriptorToRequest.at(fd);
+		if (!readyRequest.isFinished())
+			return ;
 		const std::string & serverHost = readyRequest.getHost();
 		HttpServer *httpServer;
 		if (this->serverNamesToServer.find(serverHost) != this->serverNamesToServer.end()) {
@@ -199,7 +201,8 @@ void HttpPortListener::connect(const int & fd, const int & revents) {
 		} else {
 			if (revents & POLLIN) {
 				this->receiveRequest(fd);
-			} else if (revents & POLLOUT) {
+			}
+			if (revents & POLLOUT) {
 				this->sendResponse(fd);
 			}
 		}

@@ -109,6 +109,11 @@ void HttpRequest::append(std::string & str)
     }
 }
 
+bool HttpRequest::isFinished()
+{
+    return this->state == HttpRequest::FINISHED;
+}
+
 const std::string & HttpRequest::getHost()
 {
     return this->headers["Host"];
@@ -153,6 +158,4 @@ HttpRequest & HttpRequest::operator=(HttpRequest const&src) {
         this->state = src.state;
     }
     return (*this);
-
-
 }

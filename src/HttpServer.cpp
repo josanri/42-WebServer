@@ -46,9 +46,8 @@ HttpServer & HttpServer::operator=(const HttpServer & rhs) {
 HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
 {
     HttpResponse response;
-    std::cout << "Processing request - Method of the request ->" << request.getMethod() << std::endl;
-
     HttpLocation *location = getLocation(request);
+    
     if (location != NULL && location->getRedirectionRoute() != "" && location->getRedirectionRoute() != request.getRoute()) {
         response.setStatusMessage(RESPONSE_CODE__FOUND);
         response.addHeader("Location", location->getRedirectionRoute());

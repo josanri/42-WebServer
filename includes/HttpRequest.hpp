@@ -36,6 +36,7 @@ class HttpRequest {
 		const std::string & getRoute();
 		const std::string & getHost();
 		const std::string & getBody();
+		bool isFinished();
 		size_t getContentLength();
 		std::map<std::string, std::string> & getHeaders();
 
