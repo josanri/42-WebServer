@@ -1,4 +1,4 @@
-- Default file
+- Max body to location instead of server
 - Check cgi not a map
 - HTTP Redirection
 - Method not allowed
