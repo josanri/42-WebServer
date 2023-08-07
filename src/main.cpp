@@ -53,31 +53,16 @@ int main(int argc, char **argv)
 		std::cerr << e.what() << std::endl;
 		return (1);
 	}
-	// if (!fake_parse(argv[1], serverVector)) {
-	// 	std::cerr << __func__ << ":" << __LINE__ << ": error while parsing, exiting the program" << std::endl;
-	// 	return (1);
-	// }
-	// if (!fake_portListeners(portListenerVector, fileDescriptoToPort, serverVector)) {
-	// 	std::cerr << __func__ << ":" << __LINE__ << ": not all the socket could be initialized, exiting the program" << std::endl;
-	// 	return (1);
-	// }
 	while (true) {
 		nfds_t open_fds_n = getNumberOfFds(portListenerVector);
 		struct pollfd* polling_fds = createPollStruct(open_fds_n, portListenerVector);
 
 		// std::cout << "Number of file descriptors open: " << open_fds_n << std::endl;
 		int err = poll(polling_fds, open_fds_n, POLL_TIMEOUT);
-		// for (nfds_t i = 0; i < open_fds_n; i++) {
-		// 	std::cout << "\tfd=" << polling_fds[i].fd << ", events:" 
-		// 			<< ((polling_fds[i].revents & POLLIN)  ? "POLLIN "  : "")
-		// 			<< ((polling_fds[i].revents & POLLHUP) ? "POLLHUP " : "")
-		// 			<< ((polling_fds[i].revents & POLLERR) ? "POLLERR " : "")
-		// 			<< ((polling_fds[i].revents & POLLOUT) ? "POLLOUT " : "") << std::endl;
-		// }
 		if (err == 0) {
-			// std::cout << "\tPoll time out" << std::endl;
+			std::cerr << "\tPoll time out" << std::endl;
 		} else if (err < 0) {
-			// std::cout << "\tI/O error" << std::endl;
+			std::cerr << "\tI/O error" << std::endl;
 		} else {
 			for (nfds_t i = 0; i < open_fds_n; i++) {
 				HttpPortListener * httpPortListener = fileDescriptoToPort.at(polling_fds[i].fd);
