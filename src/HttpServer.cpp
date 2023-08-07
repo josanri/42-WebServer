@@ -426,9 +426,23 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
 
     close(ctpfd[0]);
 
-    response.setStatusMessage(RESPONSE_CODE__OK);
-    std::string responseWithoutHeaders = responseContent.substr(responseContent.find("\r\n\r\n") + 4);
-    response.setResponse(responseWithoutHeaders);
+    size_t crlfcrlf = responseContent.find("\r\n\r\n");
+    if (crlfcrlf == std::string::npos) {
+        response.setResponse(responseContent);
+        return response;
+    }
+    std::string headers = responseContent.substr(0, crlfcrlf);
+
+    std::string bodyResponse = responseContent.substr(crlfcrlf + 4);
+    response.setResponse(bodyResponse);
+
+    std::vector<std::string> lines = split(headers, '\n');
+    for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++) {
+        std::vector<std::string> header = split(*it, ':');
+        if (header.size() == 2) {
+            response.addHeader(header[0], header[1]);
+        }
+    }
 
     return response;
 }
