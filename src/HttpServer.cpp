@@ -261,8 +261,9 @@ HttpLocation* HttpServer::getLocation(HttpRequest & request) {
             locationRoute = locationRoute.substr(0, locationRouteLength - 1);
             locationRouteLength--;
         }
-    
-        subStringRoute = route.substr(0, locationRouteLength);
+
+        int firstSlashAfterLocationRoute = route.find('/', locationRouteLength);
+        subStringRoute = route.substr(0, firstSlashAfterLocationRoute);
 
         bool isMethodAllowed = (*it)->isMethodAllowed(request.getMethod());
 
