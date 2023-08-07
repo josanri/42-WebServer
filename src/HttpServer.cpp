@@ -239,7 +239,7 @@ HttpLocation* HttpServer::getLocation(HttpRequest & request) {
     int locationRouteLength;
 
     location = NULL;
-    for (std::vector<HttpLocation *>::iterator it = this->locations.begin(); it != this->locations.end() && location == NULL; it++) {
+    for (std::vector<HttpLocation *>::iterator it = this->locations.begin(); it != this->locations.end(); it++) {
         locationRoute = (*it)->getRoute();
         locationRouteLength = locationRoute.size();
 
@@ -250,7 +250,9 @@ HttpLocation* HttpServer::getLocation(HttpRequest & request) {
     
         subStringRoute = route.substr(0, locationRouteLength);
 
-        if (locationRoute.compare(subStringRoute) == 0 && location == NULL) location = *it;
+        bool isMethodAllowed = (*it)->isMethodAllowed(request.getMethod());
+
+        if (locationRoute.compare(subStringRoute) == 0 && (location == NULL || isMethodAllowed)) location = *it;
     }
 
     if (location) request.setRoute(route.substr(locationRouteLength));
