@@ -35,6 +35,10 @@ HttpLocation::~HttpLocation() {
     
 }
 
+bool HttpLocation::getUpload() const {
+    return (this->upload);
+}
+
 std::string HttpLocation::getRoute() const {
     return (this->route);
 }

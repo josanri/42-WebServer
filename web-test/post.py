@@ -12,7 +12,7 @@ try:
     num2 = int(input_data["num2"].value)
 except:
     print("Sorry, the script cannot turn your inputs into numbers (integers).")
-    raise SystemExit(1)
+    raise SystemExit(0)
 print("<ul>")
 print("<li>num 1: {0}</li>".format(num1))
 print("<li>num 2: {0}</li>".format(num2))

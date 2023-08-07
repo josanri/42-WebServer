@@ -22,6 +22,7 @@ class HttpLocation
 		HttpLocation(void);
 		HttpLocation(std::string root, std::string route, std::vector<std::string> & methods, std::string defaultFile, std::string redirectionRoute, std::map<std::string, std::string> & fileExtensionToCGI, bool directoryListing, bool upload, unsigned int maxBodySize);
 		~HttpLocation(void);
+		bool getUpload() const;
 		std::string getRoute() const;
 		std::string getRoot() const;
 		std::string getCgi(std::string extension) const;

@@ -3,6 +3,7 @@
 #include <poll.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -154,6 +155,12 @@ HttpResponse HttpServer::handle_post(HttpRequest & request, HttpLocation *locati
 
 HttpResponse HttpServer::handle_put(HttpRequest & request, HttpLocation *location) {
     HttpResponse response;
+
+    if (!location->getUpload()) {
+        response.setStatusMessage(RESPONSE_CODE__FORBIDDEN);
+        return response;
+    }
+
     std::string path = location->getRoot() + request.getRoute();
 
     if (isDirectory(path)) {
@@ -419,7 +426,18 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
     write(ptcfd[1], body.c_str(), bodySize);
     close(ptcfd[1]);
 
-    // TODO: improve reading method
+    int status;
+    waitpid(pid, &status, 0);
+
+    // If the child process exited with an error, return 500
+    if (status != 0) {
+        close(ctpfd[0]);
+        response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
+        response.setResponse("Error executing CGI");
+   
+        return response;
+    }
+
     char buffer[1024];
     std::string responseContent = "";
     int bytesRead;
