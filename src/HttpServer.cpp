@@ -66,6 +66,13 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
         response.setResponse("Payload too large");
     }
     else {
+        size_t locationRouteLength = location->getRoute().size();
+
+        if (location->getRoute()[locationRouteLength - 1] == '/') {
+            locationRouteLength--;
+        }
+        request.setRoute(request.getRoute().substr(locationRouteLength));
+    
         if (request.getMethod() == "GET") {
 			response = handle_get(request, location);
 		} else if (request.getMethod() == "POST") {
@@ -262,9 +269,6 @@ HttpLocation* HttpServer::getLocation(HttpRequest & request) {
         if (locationRoute.compare(subStringRoute) == 0 && (location == NULL || isMethodAllowed)) location = *it;
     }
 
-    if (location) request.setRoute(route.substr(locationRouteLength));
-    
-
     return location;
 }
 
@@ -283,7 +287,6 @@ std::string HttpServer::listDirectory(const std::string & path, const std::strin
     DIR *dir;
     struct dirent *ent;
     std::string route;
-    std::string link;
     std::string name;
     std::string size;
     std::string date;
@@ -293,29 +296,24 @@ std::string HttpServer::listDirectory(const std::string & path, const std::strin
     std::string linkRoute;
 
     if ((dir = opendir(path.c_str())) != NULL) {
-        content = "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " + path + "</title>\n</head>\n<body>\n<h1>Index of " + path + "</h1>\n<table>\n<tr><th>Link</th><th>Name</th><th>Last modified</th><th>Size</th><th>Description</th></tr>\n";
+        content = "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " + path + "</title>\n</head>\n<body>\n<h1>Index of " + path + "</h1>\n<table>\n<tr><th>Name</th><th>Last modified</th><th>Size</th><th>Description</th></tr>\n";
         while ((ent = readdir(dir)) != NULL) {
             ss.str(std::string());
-            route = path + "/" + ent->d_name;
-            linkRoute = requestRoute + "/" + std::string(ent->d_name);
+            route = path;
+            if (route[route.size() - 1] != '/') route += "/";
+            route += ent->d_name;
+            linkRoute = requestRoute + std::string(ent->d_name);
             if (ent->d_type == DT_DIR) {
                 type = "directory";
                 if (std::string(ent->d_name).compare(".") == 0) {
-                    linkRoute = requestRoute;
-                    link = "<a href=\"" + linkRoute + "\">" + std::string(ent->d_name) + "/</a>";
                     name = std::string(ent->d_name) + "/";
                 } else if (std::string(ent->d_name).compare("..") == 0) {
-                    linkRoute = requestRoute.substr(0, requestRoute.find_last_of("/"));
-                    linkRoute = requestRoute.substr(0, linkRoute.find_last_of("/"));
-                    link = "<a href=\"" + linkRoute + "\">" + std::string(ent->d_name) + "/</a>";
                     name = std::string(ent->d_name) + "/";
                 } else {
-                    link = "<a href=\"" + linkRoute + "/\">" + std::string(ent->d_name) + "/</a>";
                     name = std::string(ent->d_name) + "/";
                 }
             }
             else {
-                link = "<a href=\"" + linkRoute + "\">" + std::string(ent->d_name) + "</a>";
                 name = std::string(ent->d_name);
                 type = "file";
             }
@@ -325,7 +323,7 @@ std::string HttpServer::listDirectory(const std::string & path, const std::strin
             size = ss.str();
             date = std::string(ctime(&path_stat.st_mtime));
             date = date.substr(0, date.size() - 1);
-            line = "<tr><td>" + link + "</td><td>" + name + "</td><td>" + date + "</td><td>" + size + "</td><td>" + type + "</td></tr>";
+            line = "<tr><td>" + name + "</td><td>" + date + "</td><td>" + size + "</td><td>" + type + "</td></tr>";
             content += line;
         }
         content += "</table>\n</body>\n</html>";
