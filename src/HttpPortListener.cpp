@@ -129,7 +129,7 @@ void HttpPortListener::sendResponse(const int & fd) {
 		}
 		HttpResponse response = httpServer->processHttpRequest(readyRequest);
 		response.buildResponse(httpServer->getErrorNumberToLocation());
-		std::cout << "Response: " << response.getResponse() << std::endl;
+		std::cout << "\033[0;34mResponse: " << response.getResponse() << "\033[0m" << std::endl;
 		ssize_t writen = send(fd, response.c_str(), response.size(), 0);
 		if (writen != (ssize_t) response.size()) {
 			std::cerr << "Error when sending the message" << std::endl;
@@ -165,7 +165,7 @@ void HttpPortListener::receiveRequest(const int & fd) {
 		/* Debug */
 		std::string request_debug = request;
 		replaceAll(request_debug, "\r\n", "\\r\\n\n");
-		std::cout << request_debug  << std::endl;
+		std::cout << "\033[0;32mRequest: " << request_debug << "\033[0m" << std::endl;
 		/* */
 	}
 }
