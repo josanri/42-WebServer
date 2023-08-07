@@ -22,12 +22,11 @@ HttpServer::HttpServer(void) {
 }
 
 HttpServer::HttpServer(std::vector<int> & ports, std::vector<std::string> &  serverNames, std::vector<HttpLocation *>  & locations,
-    std::map<int, std::string> & errorNumberToLocation, unsigned int maxBody) {
+    std::map<int, std::string> & errorNumberToLocation) {
     this->ports = ports;
     this->locations = locations;
     this->serverNames = serverNames;
     this->errorNumberToLocation = errorNumberToLocation;
-    this->maxBody = maxBody;
  }
 
 HttpServer::~HttpServer() {
@@ -40,7 +39,6 @@ HttpServer & HttpServer::operator=(const HttpServer & rhs) {
         this->serverNames = rhs.serverNames;
         this->locations = rhs.locations;
         this->errorNumberToLocation = rhs.errorNumberToLocation;
-        this->maxBody = rhs.maxBody;
     }
     return (*this);
 }
@@ -63,7 +61,7 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
         response.setStatusMessage(RESPONSE_CODE__METHOD_NOT_ALLOWED);
         response.setResponse("Method not allowed");
     }
-    else if (request.getContentLength() > this->maxBody) {
+    else if (request.getContentLength() > location->getMaxBodySize()) {
         response.setStatusMessage(RESPONSE_CODE__PAYLOAD_TOO_LARGE);
         response.setResponse("Payload too large");
     }

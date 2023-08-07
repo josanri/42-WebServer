@@ -16,10 +16,11 @@ class HttpLocation
 		std::map<std::string, std::string> fileExtensionToCGI;
 		bool directoryListing;
 		bool upload;
+		unsigned int maxBodySize;
 
 	public:
 		HttpLocation(void);
-		HttpLocation(std::string root, std::string route, std::vector<std::string> & methods, std::string defaultFile, std::string redirectionRoute, std::map<std::string, std::string> & fileExtensionToCGI, bool directoryListing, bool upload);
+		HttpLocation(std::string root, std::string route, std::vector<std::string> & methods, std::string defaultFile, std::string redirectionRoute, std::map<std::string, std::string> & fileExtensionToCGI, bool directoryListing, bool upload, unsigned int maxBodySize);
 		~HttpLocation(void);
 		std::string getRoute() const;
 		std::string getRoot() const;
@@ -28,6 +29,7 @@ class HttpLocation
 		std::string getRedirectionRoute() const;
 		bool isMethodAllowed(std::string method);
 		bool directoryListingAllowed() const;
+		unsigned int getMaxBodySize() const;
 
 };
 

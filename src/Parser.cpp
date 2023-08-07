@@ -74,6 +74,7 @@ HttpLocation * Parser::extractLocation(std::string & serverChunk) {
   std::string route = Extractor::str(locationChunk, "route");
   std::string redirection = Extractor::str(locationChunk, "redirection");
   std::string defaultFile = Extractor::str(locationChunk, "default_file");
+  unsigned int maxBody = Extractor::ui(locationChunk, "body_max");
 
   std::vector<std::string> methods = Extractor::v_str(locationChunk, "methods");
 
@@ -82,7 +83,7 @@ HttpLocation * Parser::extractLocation(std::string & serverChunk) {
 
   std::map<std::string, std::string> cgiFileExtensionMap = Extractor::m_str_str(locationChunk, "cgi");
 
-  HttpLocation *location = new HttpLocation(root, route, methods, defaultFile, redirection, cgiFileExtensionMap, directoryListing, upload);
+  HttpLocation *location = new HttpLocation(root, route, methods, defaultFile, redirection, cgiFileExtensionMap, directoryListing, upload, maxBody);
 
   return location;
 }
@@ -95,8 +96,6 @@ HttpServer * Parser::extractServer() {
 
   std::vector<std::string> serverNames = Extractor::v_str(serverChunk, "server_names");
 
-  unsigned int maxBody = Extractor::ui(serverChunk, "body_max");
-
   std::vector<int>ports = Extractor::v_i(serverChunk, "ports");
 
   std::map<int, std::string> errorNumberToLocation = Extractor::m_i_str(serverChunk, "error_pages");
@@ -108,7 +107,7 @@ HttpServer * Parser::extractServer() {
     location = this->extractLocation(serverChunk);
   } while (location != NULL);
 
-  HttpServer *server = new HttpServer(ports, serverNames, locations, errorNumberToLocation, maxBody);
+  HttpServer *server = new HttpServer(ports, serverNames, locations, errorNumberToLocation);
 
   return server;
 }
