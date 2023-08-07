@@ -53,11 +53,9 @@ std::string HttpResponse::getResponse() const
 
 void HttpResponse::setResponse(std::string response)
 {
-	if (response.size() > 0) {
-		std::stringstream ss;
-    ss << response.size();
-		this->addHeader("Content-Length", ss.str());
-	}
+	std::stringstream ss;
+	ss << response.size();
+	this->addHeader("Content-Length", ss.str());
 	
 	this->response = response;
 }
