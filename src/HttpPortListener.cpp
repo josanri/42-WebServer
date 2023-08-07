@@ -179,8 +179,8 @@ void HttpPortListener::acceptConnection(const int & fd) {
 		std::cerr << "Error when trying to accept a connection " << std::endl;
 		close(fd);
 	} else {
-		if (fcntl(new_socket_fd, F_SETFL, O_NONBLOCK) == -1 || setTimeout(fd) != 0 || setKeepAlive(fd) != 0) {
-			close(fd);
+		if (fcntl(new_socket_fd, F_SETFL, O_NONBLOCK) == -1 || setTimeout(new_socket_fd) != 0 || setKeepAlive(new_socket_fd) != 0) {
+			close(new_socket_fd);
 		} else {
 			std::cout << "New file_descriptor " << new_socket_fd << std::endl;
 			this->addConnection(new_socket_fd);
