@@ -166,7 +166,8 @@ void HttpPortListener::receiveRequest(const int & fd) {
 		}
 		/* Debug */
 		std::string request_debug = request;
-		replaceAll(request_debug, "\r\n", "\\r\\n\n");
+		replaceAll(request_debug, "\r", "\\r");
+		replaceAll(request_debug, "\n", "\\n\n");
 		std::cout << "\033[0;32mRequest: " << request_debug << "\033[0m" << std::endl;
 		/* */
 	}
