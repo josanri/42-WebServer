@@ -139,7 +139,6 @@ HttpServer * Parser::extractServer() {
 }
 
 std::string Parser::extractChunk(std::string & content, std::string const & chunk_name) {
-  std::string chunk = "";
   std::string chunk_start = chunk_name + "={";
   std::string chunk_end = "}";
 
@@ -151,43 +150,36 @@ std::string Parser::extractChunk(std::string & content, std::string const & chun
   start += chunk_start.length();
 
   std::size_t current_position = start;
-  std::size_t end = 0;
   std::size_t inner_start;
-  std::size_t inner_end;
+  std::size_t end;
 
   // Handle nested chunks. The inner chunk must be closed before the outer chunk. There can be multiple inner chunks in each inner and outer chunk.
-  std::size_t open_brackets = 0;
+  int opened_brackets = 1;
   do {
     inner_start = content.find("={", current_position);
-    if (inner_start != std::string::npos) {
-      open_brackets++;
+    end = content.find("}", current_position);
+
+    if (inner_start != std::string::npos && inner_start < end) {
+      opened_brackets++;
       current_position = inner_start + 2;
     }
-  } while (inner_start != std::string::npos && inner_start < content.length());
-
-  current_position = start;
-  while (open_brackets > 0 && current_position < content.length()) {
-    inner_end = content.find(chunk_end, current_position);
-    if (inner_end != std::string::npos) {
-      open_brackets--;
-      current_position = inner_end + chunk_end.length();
+    if (end != std::string::npos && inner_start > end) {
+      opened_brackets--;
+      current_position = end + 1;
     }
+  } while (opened_brackets > 0 && end != std::string::npos && current_position < content.length());
+
+  if (opened_brackets > 0 || end == std::string::npos) {
+    throw std::runtime_error("Chunk '" + chunk_name + "' not closed");
   }
 
-  if (open_brackets > 0) {
-    return "";
-  }
-
-  end = content.find(chunk_end, current_position);
-
-  if (end == std::string::npos) {
-    return "";
-  }
-
-  chunk = content.substr(start, end - start);
+  std::string chunk = content.substr(start, end - start);
   trim(chunk);
 
-  content = content.substr(0, start - chunk_start.length()) + content.substr(end + chunk_end.length());
+  std::string s1 = content.substr(0, start - chunk_start.length());
+  std::string s2 = content.substr(end + chunk_end.length(), std::string::npos);
+
+  content = s1 + s2;
   return chunk;
 }
 
