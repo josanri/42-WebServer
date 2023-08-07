@@ -111,7 +111,7 @@ void HttpRequest::append(std::string & str)
 
 bool HttpRequest::isFinished()
 {
-    return this->state == HttpRequest::FINISHED;
+    return this->state == HttpRequest::FINISHED || this->state == HttpRequest::ERROR;
 }
 
 const std::string & HttpRequest::getHost()

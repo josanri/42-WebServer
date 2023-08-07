@@ -56,8 +56,6 @@ int main(int argc, char **argv)
 	while (true) {
 		nfds_t open_fds_n = getNumberOfFds(portListenerVector);
 		struct pollfd* polling_fds = createPollStruct(open_fds_n, portListenerVector);
-
-		// std::cout << "Number of file descriptors open: " << open_fds_n << std::endl;
 		int err = poll(polling_fds, open_fds_n, POLL_TIMEOUT);
 		if (err == 0) {
 			std::cerr << "\033[0;33mPoll time out\033[0m" << std::endl;
