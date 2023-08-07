@@ -134,6 +134,11 @@ const std::string & HttpRequest::getBody()
     return this->body;
 }
 
+void HttpRequest::setRoute(std::string route)
+{
+    this->route = route;
+}
+
 size_t HttpRequest::getContentLength()
 {
     return this->contentLength;

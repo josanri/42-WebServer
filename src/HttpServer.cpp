@@ -253,6 +253,9 @@ HttpLocation* HttpServer::getLocation(HttpRequest & request) {
         if (locationRoute.compare(subStringRoute) == 0 && location == NULL) location = *it;
     }
 
+    if (location) request.setRoute(route.substr(locationRouteLength));
+    
+
     return location;
 }
 
