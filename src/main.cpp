@@ -60,9 +60,9 @@ int main(int argc, char **argv)
 		// std::cout << "Number of file descriptors open: " << open_fds_n << std::endl;
 		int err = poll(polling_fds, open_fds_n, POLL_TIMEOUT);
 		if (err == 0) {
-			std::cerr << "\tPoll time out" << std::endl;
+			std::cerr << "Poll time out" << std::endl;
 		} else if (err < 0) {
-			std::cerr << "\tI/O error" << std::endl;
+			std::cerr << "Poll I/O error" << std::endl;
 		} else {
 			for (nfds_t i = 0; i < open_fds_n; i++) {
 				HttpPortListener * httpPortListener = fileDescriptoToPort.at(polling_fds[i].fd);
