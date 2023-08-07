@@ -42,6 +42,10 @@ std::string HttpLocation::getRoot() const {
     return (this->root);
 }
 
+std::string HttpLocation::getDefaultFile() const {
+    return (this->defaultFile);
+}
+
 std::string HttpLocation::getCgi(std::string extension) const {
     std::map<std::string, std::string>::const_iterator it = this->fileExtensionToCGI.find(extension);
 

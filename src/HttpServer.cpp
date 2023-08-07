@@ -86,7 +86,7 @@ HttpResponse HttpServer::handle_get(HttpRequest & request, HttpLocation *locatio
     std::string path = location->getRoot() + request.getRoute();
 
     if (isDirectory(path)) {
-        std::string index = path + "/index.html";
+        std::string index = path + "/" + location->getDefaultFile();
         std::ifstream file(index.c_str());
         if (file.good()) {
             std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
