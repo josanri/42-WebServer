@@ -37,6 +37,7 @@ class HttpRequest {
 		const std::string & getHost();
 		const std::string & getBody();
 		size_t getContentLength();
+		std::map<std::string, std::string> & getHeaders();
 
 };
 

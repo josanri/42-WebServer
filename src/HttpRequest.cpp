@@ -134,6 +134,11 @@ size_t HttpRequest::getContentLength()
     return this->contentLength;
 }
 
+std::map<std::string, std::string> & HttpRequest::getHeaders()
+{
+    return this->headers;
+}
+
 HttpRequest & HttpRequest::operator=(HttpRequest const&src) {
     if (this != &src)
     {
