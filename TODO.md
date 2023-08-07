@@ -1,3 +1,4 @@
 - Max body to location instead of server
 - Check cgi not a map
 - Method not allowed
+- Free memory on server not found
