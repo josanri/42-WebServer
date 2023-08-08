@@ -72,7 +72,7 @@ int HttpPortListener::bindServerConnection() {
 	return (EXIT_SUCCESS);
 }
 
-static int setTimeout(int fd){
+int HttpPortListener::setTimeout(int fd){
 	struct timeval timeout;      
 	timeout.tv_sec = 10;
 	timeout.tv_usec = 0;
@@ -88,7 +88,7 @@ static int setTimeout(int fd){
 	return (EXIT_SUCCESS);
 }
 
-static int setKeepAlive(int fd){
+int HttpPortListener::setKeepAlive(int fd){
 	int yes = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(int)) < 0) {
 		std::cerr << __func__ << ":" << __LINE__ << ": error when setting socket to keepalive mode" << std::endl;

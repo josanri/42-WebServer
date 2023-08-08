@@ -23,6 +23,8 @@ class HttpPortListener
 		void sendResponse(const int & fd);
 		void receiveRequest(const int & fd);
 		void acceptConnection(const int & fd);
+		int setTimeout(int fd);
+		int setKeepAlive(int fd);
 	public:
 		HttpPortListener(int port, std::map<int, HttpPortListener*> & map, const std::vector<HttpServer *> & servers);
 		HttpPortListener(const HttpPortListener &);
