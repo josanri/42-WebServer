@@ -30,7 +30,6 @@ void HttpRequest::parseHeadersKeyValue(size_t first_pos, size_t last_pos)
     } else {
         key = this->full_request.substr(first_pos, second_pos - first_pos);
         value = this->full_request.substr(second_pos + 2, last_pos - second_pos - 2);
-        std::cout << value << " " << (value == "") << std::endl;
         if (value == "") {
             this->state = HttpRequest::ERROR;
         } else if ((key == "Transfer-Encoding" || key == "transfer-encoding") && value == "chunked") {
