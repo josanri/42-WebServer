@@ -21,7 +21,7 @@
 #include "utils.h"
 
 #define BUFFER_SIZE 8192
-#define LISTEN_BACKLOG 20
+#define LISTEN_BACKLOG 128
 
 void HttpPortListener::addConnection(int fd)
 {
