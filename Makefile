@@ -24,5 +24,8 @@ re: fclean all
 
 run: $(NAME)
 	@./$(NAME)
-	
+
+test: $(NAME)
+	@./$(NAME) testers/tester.cfg
+
 .PHONY: all fclean clean re
