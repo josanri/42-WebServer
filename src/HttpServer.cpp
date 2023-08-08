@@ -346,18 +346,11 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
         return response;
     }
 
-    int ctpfd[2];
-    int ptcfd[2];
-    if (pipe(ctpfd) == -1) {
-        response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
-        response.setResponse("Error creating pipe");
-        return response;
-    }
-    if (pipe(ptcfd) == -1) {
-        response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
-        response.setResponse("Error creating pipe");
-        return response;
-    }
+    std::ofstream file("cgiInput");
+    file << body;
+    file.close();
+    int fdin = open("cgiInput", O_RDONLY);
+    int fdout = open("cgiOutput", O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
     pid_t pid = fork();
     if (pid == -1) {
@@ -379,10 +372,8 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
     int bodySize = body.size();
 
     if (pid == 0) {
-        close(ctpfd[0]);
-        close(ptcfd[1]);
-        dup2(ctpfd[1], STDOUT_FILENO);
-        dup2(ptcfd[0], STDIN_FILENO);
+        dup2(fdin, STDIN_FILENO);
+        dup2(fdout, STDOUT_FILENO);
 
         std::stringstream ss;
         ss << bodySize;
@@ -410,6 +401,8 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
         envp[i] = NULL;
         if (execve(cgi.c_str(), argv, envp) == -1) {
             std::cerr << "Error executing CGI" << std::endl;
+            close(fdin);
+            close(fdout);
             delete[] envp;
             exit(1);
         }
@@ -417,34 +410,31 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
         exit(0);
     }
 
-    close(ctpfd[1]);
-    close(ptcfd[0]);
-
-    write(ptcfd[1], body.c_str(), bodySize);
-    close(ptcfd[1]);
-
     int status;
     waitpid(pid, &status, 0);
 
+    close(fdin);
+
     // If the child process exited with an error, return 500
     if (status != 0) {
-        close(ctpfd[0]);
+        close(fdout);
         response.setStatusMessage(RESPONSE_CODE__INTERNAL_SERVER_ERROR);
         response.setResponse("Error executing CGI");
    
         return response;
     }
 
-    char buffer[100024];
-    std::string responseContent = "";
-    int bytesRead;
+    std::string responseContent;
+    std::stringstream ss;
 
-    while ((bytesRead = read(ctpfd[0], buffer, 100023)) > 0) {
-        buffer[bytesRead] = '\0';
-        responseContent += buffer;
-    }
+    close(fdout);
 
-    close(ctpfd[0]);
+    std::ifstream file2("cgiOutput");
+    ss << file2.rdbuf();
+    file2.close();
+
+    responseContent = ss.str();
+
 
     size_t crlfcrlf = responseContent.find("\r\n\r\n");
     if (crlfcrlf == std::string::npos) {
@@ -466,5 +456,7 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
         }
     }
 
+    std::remove("cgiInput");
+    std::remove("cgiOutput");
     return response;
 }
