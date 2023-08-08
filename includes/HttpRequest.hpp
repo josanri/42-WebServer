@@ -18,6 +18,7 @@ class HttpRequest {
 		std::string route;
 		std::string httpVersion;
 		std::map<std::string, std::string> headers;
+		std::string body;
 		std::string full_request;
 		size_t crlfcrlf;
 		size_t contentLength;
@@ -32,11 +33,10 @@ class HttpRequest {
 		~HttpRequest();
 		void append(std::string & str);
 		void parseHeaders();
-		void unchunk(std::string & str);
 		const std::string & getMethod();
 		const std::string & getRoute();
 		const std::string & getHost();
-		const char *getBody();
+		const std::string & getBody();
 		void setRoute(std::string route);
 		bool isFinished() const;
 		bool error() const;

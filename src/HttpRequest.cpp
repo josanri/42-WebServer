@@ -83,10 +83,6 @@ void HttpRequest::parseHeaders()
 
 }
 
-void HttpRequest::unchunk(std::string & str) {
-    (void) str;
-}
-
 void HttpRequest::append(std::string & str)
 {
     this->full_request.append(str);
@@ -116,11 +112,16 @@ void HttpRequest::append(std::string & str)
             if (this->full_request.find("\r\n\r\n", this->crlfcrlf + 4) != std::string::npos)
             {
                 this->state = HttpRequest::FINISHED;
+                this->body = this->full_request.substr(this->crlfcrlf + 4);
+                replaceAll(this->body, "\r\n", "");
+                this->contentLength = this->body.size();
+
             }
         }
         else if (this->full_request.size() == this->contentLength + this->crlfcrlf + 4)
         {
             this->state = HttpRequest::FINISHED;
+            this->body = this->full_request.substr(this->crlfcrlf + 4);
         }
         else if (this->full_request.size() > this->contentLength + this->crlfcrlf + 4) {
             this->state = HttpRequest::ERROR; // Content length larger
@@ -153,11 +154,9 @@ const std::string & HttpRequest::getRoute()
     return this->route;
 }
 
-const char *HttpRequest::getBody()
+const std::string & HttpRequest::getBody()
 {
-    if (this->state != HttpRequest::FINISHED)
-        throw std::runtime_error("Null body");
-    return this->full_request.c_str() + this->crlfcrlf + 4;
+    return this->body;
 }
 
 void HttpRequest::setRoute(std::string route)
@@ -183,6 +182,7 @@ HttpRequest & HttpRequest::operator=(HttpRequest const&src) {
         this->route = src.route;
         this->httpVersion = src.httpVersion;
         this->headers = src.headers;
+        this->body = src.body;
         this->crlfcrlf = src.crlfcrlf;
         this->contentLength = src.contentLength;
         this->state = src.state;
