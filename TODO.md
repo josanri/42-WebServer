@@ -1,3 +1,2 @@
 - Parse BIG numbers
-- Method not allowed
 - Free memory on server not found
