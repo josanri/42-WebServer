@@ -146,7 +146,7 @@ void HttpPortListener::receiveRequest(const int & fd) {
 		this->closeConnection(fd);
 	} else {
 		// Receive connection
-		read_buffer[len] = 0;
+		read_buffer[len] = '\0';
 		std::string request = read_buffer;
 		if (this->fileDescriptorToRequest.find(fd) != this->fileDescriptorToRequest.end()) {
 			HttpRequest & inProcessRequest = this->fileDescriptorToRequest.at(fd);
