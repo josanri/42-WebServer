@@ -21,7 +21,7 @@
 #include "utils.h"
 
 #define BUFFER_SIZE 8192
-#define LISTEN_BACKLOG 128
+#define LISTEN_BACKLOG 1000
 
 void HttpPortListener::addConnection(int fd)
 {
@@ -127,7 +127,7 @@ void HttpPortListener::sendResponse(const int & fd) {
 		if (writen != (ssize_t) response.size()) {
 			std::cerr << "Error when sending the message" << std::endl;
 		} else {
-			std::cout << "\tMessageSent" << std::endl;
+			// std::cout << "\tMessageSent" << std::endl;
 			// Remove request
 			this->fileDescriptorToRequest.erase(fd);
 		}
@@ -157,8 +157,7 @@ void HttpPortListener::receiveRequest(const int & fd) {
 		}
 		/* Debug */
 		std::string request_debug = request;
-		replaceAll(request_debug, "\r", "\\r");
-		replaceAll(request_debug, "\n", "\\n\n");
+		replaceAll(request_debug, "\r\n", "\\r\\n\n");
 		std::cout << "\033[0;32mRequest: " << request_debug << "\033[0m" << std::endl;
 		/* */
 	}
