@@ -11,7 +11,7 @@ class HttpRequest {
 		CHUNKS_NOT_FINISHED, // Transfer Encoding chunks requests
 		BODY_NOT_FINISHED, // Post requests
 		FINISHED,
-		ERROR,
+		ERROR
 	};
 	private:
 		std::string method;

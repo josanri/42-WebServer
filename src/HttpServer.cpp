@@ -49,7 +49,6 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
     HttpResponse response;
     HttpLocation *location = getLocation(request);
     
-    std::cout << "Length ?" << request.getContentLength() << std::endl;
     if (request.error()) {
         response.setStatusMessage(RESPONSE_CODE__BAD_REQUEST);
         response.setResponse("Bad Request");

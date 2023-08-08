@@ -98,6 +98,9 @@ void HttpRequest::append(std::string & str)
             {
                 this->state = HttpRequest::BODY_NOT_FINISHED;
                 this->parseHeaders();
+            } else if (this->full_request.find("HEAD", 0, 4) != std::string::npos) {
+                this->state = HttpRequest::FINISHED;
+                this->parseHeaders();
             } else {
                 this->state = HttpRequest::ERROR; // Unrecognized metod
             }
@@ -128,14 +131,12 @@ void HttpRequest::append(std::string & str)
 
 bool HttpRequest::isFinished() const
 {
-    return this->state == HttpRequest::FINISHED || this->state == HttpRequest::ERROR;
+    return this->error() || this->state == HttpRequest::FINISHED;
 }
-
-
 
 bool HttpRequest::error() const
 {
-	return (this->state == HttpRequest::ERROR);
+	return this->state == HttpRequest::ERROR;
 }
 
 const std::string & HttpRequest::getHost()
