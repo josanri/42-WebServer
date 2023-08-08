@@ -112,10 +112,24 @@ void HttpRequest::append(std::string & str)
             if (this->full_request.find("\r\n\r\n", this->crlfcrlf + 4) != std::string::npos)
             {
                 this->state = HttpRequest::FINISHED;
-                this->body = this->full_request.substr(this->crlfcrlf + 4);
-                replaceAll(this->body, "\r\n", "");
-                this->contentLength = this->body.size();
+                // unchunk the body. Interpret the hexa numbers and remove the \r\n
+                std::string chunkedBody = this->full_request.substr(this->crlfcrlf + 4);
+                std::string unchunkedBody = "";
+                size_t chunkSize;
+                size_t chunkStart = 0;
+                size_t chunkEnd;
 
+                while (chunkStart < chunkedBody.size())
+                {
+                    chunkSize = strtol(chunkedBody.substr(chunkStart, chunkedBody.find("\r\n", chunkStart) - chunkStart).c_str(), NULL, 16);
+                    chunkEnd = chunkedBody.find("\r\n", chunkStart) + 2 + chunkSize;
+                    unchunkedBody += chunkedBody.substr(chunkedBody.find("\r\n", chunkStart) + 2, chunkSize);
+                    chunkStart = chunkEnd;
+                }
+                this->body = unchunkedBody;
+
+                // set content length
+                this->contentLength = this->body.size();
             }
         }
         else if (this->full_request.size() == this->contentLength + this->crlfcrlf + 4)
