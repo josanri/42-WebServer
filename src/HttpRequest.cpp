@@ -30,7 +30,10 @@ void HttpRequest::parseHeadersKeyValue(size_t first_pos, size_t last_pos)
     } else {
         key = this->full_request.substr(first_pos, second_pos - first_pos);
         value = this->full_request.substr(second_pos + 2, last_pos - second_pos - 2);
-        if ((key == "Transfer-Encoding" || key == "transfer-encoding") && value == "chunked") {
+        std::cout << value << " " << (value == "") << std::endl;
+        if (value == "") {
+            this->state = HttpRequest::ERROR;
+        } else if ((key == "Transfer-Encoding" || key == "transfer-encoding") && value == "chunked") {
             this->chunked = true;
         } else if (key == "Content-Length" || key == "content-length") {
             this->contentLength = atoi(value.c_str());
@@ -124,9 +127,16 @@ void HttpRequest::append(std::string & str)
     }
 }
 
-bool HttpRequest::isFinished()
+bool HttpRequest::isFinished() const
 {
     return this->state == HttpRequest::FINISHED || this->state == HttpRequest::ERROR;
+}
+
+
+
+bool HttpRequest::error() const
+{
+	return (this->state == HttpRequest::ERROR);
 }
 
 const std::string & HttpRequest::getHost()

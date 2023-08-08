@@ -50,7 +50,11 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
     HttpLocation *location = getLocation(request);
     
     std::cout << "Length ?" << request.getContentLength() << std::endl;
-    if (location != NULL && location->getRedirectionRoute() != "" && location->getRedirectionRoute() != request.getRoute()) {
+    if (request.error()) {
+        response.setStatusMessage(RESPONSE_CODE__BAD_REQUEST);
+        response.setResponse("Bad Request");
+    }
+    else if (location != NULL && location->getRedirectionRoute() != "" && location->getRedirectionRoute() != request.getRoute()) {
         response.setStatusMessage(RESPONSE_CODE__FOUND);
         response.addHeader("Location", location->getRedirectionRoute());
         response.setResponse("");
@@ -458,11 +462,9 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
 
     std::vector<std::string> lines = split(headers, "\r\n");
     for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++) {
-        std::cout << "Señales de vida" << *it << std::endl;
         std::vector<std::string> header = split(*it, ':');
         if (header.size() == 2) {
             response.addHeader(header[0], header[1]);
-            std::cout << "COPIIII" << header[0] << header[1] << std::endl;
         }
     }
 
