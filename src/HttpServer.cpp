@@ -49,6 +49,7 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
     HttpResponse response;
     HttpLocation *location = getLocation(request);
     
+    std::cout << "Length ?" << request.getContentLength() << std::endl;
     if (location != NULL && location->getRedirectionRoute() != "" && location->getRedirectionRoute() != request.getRoute()) {
         response.setStatusMessage(RESPONSE_CODE__FOUND);
         response.addHeader("Location", location->getRedirectionRoute());
@@ -86,7 +87,6 @@ HttpResponse HttpServer::processHttpRequest(HttpRequest & request)
 
     response.addHeader("Connection", "close");
     response.addHeader("Server", this->serverNames[0]);
-
     return response;
 }
 
@@ -156,7 +156,6 @@ HttpResponse HttpServer::handle_post(HttpRequest & request, HttpLocation *locati
         response.setResponse("No CGI for extension");
         return response;
     }
-
     return cgi(request, path, cgiPath);
 }
 
@@ -367,15 +366,15 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
         return response;
     }
 
-        std::vector<std::string> args = split(cgiPath, ' ');
-        std::string cgi = args[0];
+    std::vector<std::string> args = split(cgiPath, ' ');
+    std::string cgi = args[0];
 
-        char *argv[args.size() + 2];
-        argv[args.size()] = (char *)path.c_str();
-        argv[args.size() + 1] = NULL;
-        for (unsigned int i = 0; i < args.size(); i++) {
-            argv[i] = (char *)args[i].c_str();
-        }
+    char *argv[args.size() + 2];
+    argv[args.size()] = (char *)path.c_str();
+    argv[args.size() + 1] = NULL;
+    for (unsigned int i = 0; i < args.size(); i++) {
+        argv[i] = (char *)args[i].c_str();
+    }
 
     int bodySize = body.size();
 
@@ -409,7 +408,6 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
         }
 
         envp[i] = NULL;
-
         if (execve(cgi.c_str(), argv, envp) == -1) {
             std::cerr << "Error executing CGI" << std::endl;
             delete[] envp;
@@ -437,11 +435,11 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
         return response;
     }
 
-    char buffer[1024];
+    char buffer[100024];
     std::string responseContent = "";
     int bytesRead;
 
-    while ((bytesRead = read(ctpfd[0], buffer, 1023)) > 0) {
+    while ((bytesRead = read(ctpfd[0], buffer, 100023)) > 0) {
         buffer[bytesRead] = '\0';
         responseContent += buffer;
     }
@@ -458,11 +456,13 @@ HttpResponse HttpServer::cgi (HttpRequest & request, std::string & path, std::st
     std::string bodyResponse = responseContent.substr(crlfcrlf + 4);
     response.setResponse(bodyResponse);
 
-    std::vector<std::string> lines = split(headers, '\n');
+    std::vector<std::string> lines = split(headers, "\r\n");
     for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++) {
+        std::cout << "Señales de vida" << *it << std::endl;
         std::vector<std::string> header = split(*it, ':');
         if (header.size() == 2) {
             response.addHeader(header[0], header[1]);
+            std::cout << "COPIIII" << header[0] << header[1] << std::endl;
         }
     }
 

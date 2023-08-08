@@ -1,4 +1,5 @@
 #include "HttpRequest.hpp"
+#include "utils.h"
 #include <map>
 #include <iostream>
 #include <cstdlib>
@@ -29,9 +30,9 @@ void HttpRequest::parseHeadersKeyValue(size_t first_pos, size_t last_pos)
     } else {
         key = this->full_request.substr(first_pos, second_pos - first_pos);
         value = this->full_request.substr(second_pos + 2, last_pos - second_pos - 2);
-        if (key == "Transfer-Encoding" && value == "chunked") {
+        if ((key == "Transfer-Encoding" || key == "transfer-encoding") && value == "chunked") {
             this->chunked = true;
-        } else if (key == "Content-Length") {
+        } else if (key == "Content-Length" || key == "content-length") {
             this->contentLength = atoi(value.c_str());
         } else {
             this->headers[key] = value;
@@ -107,6 +108,9 @@ void HttpRequest::append(std::string & str)
             {
                 this->state = HttpRequest::FINISHED;
                 this->body = this->full_request.substr(this->crlfcrlf + 4);
+                replaceAll(this->body, "\r\n", "");
+                this->contentLength = this->body.size();
+
             }
         }
         else if (this->full_request.size() == this->contentLength + this->crlfcrlf + 4)
