@@ -120,9 +120,9 @@ void HttpPortListener::sendResponse(const int & fd) {
 		}
 		HttpResponse response = httpServer->processHttpRequest(readyRequest);
 		response.buildResponse(httpServer->getErrorNumberToLocation());
-		std::string response_copy = response.getResponse();
-		replaceAll(response_copy, "\r\n", "\\r\\n\n");
-		std::cout << "\033[0;34mResponse: " << response_copy << "\033[0m" << std::endl;
+		// std::string response_copy = response.getResponse();
+		// replaceAll(response_copy, "\r\n", "\\r\\n\n");
+		// std::cout << "\033[0;34mResponse: " << response_copy << "\033[0m" << std::endl;
 		ssize_t writen = send(fd, response.c_str(), response.size(), 0);
 		if (writen != (ssize_t) response.size()) {
 			std::cerr << "Error when sending the message" << std::endl;
@@ -156,9 +156,9 @@ void HttpPortListener::receiveRequest(const int & fd) {
 			this->fileDescriptorToRequest[fd].append(request);
 		}
 		/* Debug */
-		std::string request_debug = request;
-		replaceAll(request_debug, "\r\n", "\\r\\n\n");
-		std::cout << "\033[0;32mRequest: " << request_debug << "\033[0m" << std::endl;
+		// std::string request_debug = request;
+		// replaceAll(request_debug, "\r\n", "\\r\\n\n");
+		// std::cout << "\033[0;32mRequest: " << request_debug << "\033[0m" << std::endl;
 		/* */
 	}
 }
