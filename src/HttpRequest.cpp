@@ -6,6 +6,7 @@
 HttpRequest::HttpRequest() {
     this->state = HttpRequest::HEADERS_NOT_FINISHED;
     this->contentLength = 0;
+    this->chunked = false;
 }
 
 HttpRequest::~HttpRequest() {
@@ -28,7 +29,9 @@ void HttpRequest::parseHeadersKeyValue(size_t first_pos, size_t last_pos)
     } else {
         key = this->full_request.substr(first_pos, second_pos - first_pos);
         value = this->full_request.substr(second_pos + 2, last_pos - second_pos - 2);
-        if (key == "Content-Length") {
+        if (key == "Transfer-Encoding" && value == "chunked") {
+            this->chunked = true;
+        } else if (key == "Content-Length") {
             this->contentLength = atoi(value.c_str());
         } else {
             this->headers[key] = value;
@@ -99,13 +102,21 @@ void HttpRequest::append(std::string & str)
     }
     if (this->state == HttpRequest::BODY_NOT_FINISHED) {
         // Count the length of the body according to the content length
-        if (this->full_request.size() == this->contentLength + this->crlfcrlf + 4)
+        if (this->chunked) {
+            if (this->full_request.find("\r\n\r\n", this->crlfcrlf + 4) != std::string::npos)
+            {
+                this->state = HttpRequest::FINISHED;
+                this->body = this->full_request.substr(this->crlfcrlf + 4);
+            }
+        }
+        else if (this->full_request.size() == this->contentLength + this->crlfcrlf + 4)
         {
             this->state = HttpRequest::FINISHED;
             this->body = this->full_request.substr(this->crlfcrlf + 4);
         }
-        else if (this->full_request.size() > this->contentLength + this->crlfcrlf + 4)
+        else if (this->full_request.size() > this->contentLength + this->crlfcrlf + 4) {
             this->state = HttpRequest::ERROR; // Content length larger
+        }
     }
 }
 
@@ -161,6 +172,7 @@ HttpRequest & HttpRequest::operator=(HttpRequest const&src) {
         this->crlfcrlf = src.crlfcrlf;
         this->contentLength = src.contentLength;
         this->state = src.state;
+        this->chunked = src.chunked;
     }
     return (*this);
 }

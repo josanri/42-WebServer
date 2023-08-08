@@ -22,6 +22,7 @@ class HttpRequest {
 		std::string full_request;
 		size_t crlfcrlf;
 		size_t contentLength;
+		bool chunked;
 		HttpRequestState state;
 		void parseHeadersKeyValue(size_t first_pos, size_t second_pos);
 
