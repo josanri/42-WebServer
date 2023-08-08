@@ -3,4 +3,4 @@ webserv
 *.o
 
 **.DS_STORE
-.vscode/settings.json
+.vscode/*
