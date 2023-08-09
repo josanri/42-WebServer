@@ -1,4 +1,5 @@
 #include <poll.h>
+#include <unistd.h>
 
 #include <iostream>
 #include <vector>
@@ -14,6 +15,17 @@
 
 #define POLL_TIMEOUT 1000
 
+void insertAllServers(std::set<HttpServer *>  & serverSet, std::vector<HttpPortListener *> &serverVector) {
+	for (std::vector<HttpPortListener *>::iterator iter = serverVector.begin(); iter != serverVector.end(); ++iter)
+	{
+		std::vector<HttpServer *> serverVector = (*iter)->getServer();
+		for (std::vector<HttpServer *>::iterator iterat2 = serverVector.begin(); iterat2 != serverVector.end(); ++iterat2)
+		{
+			serverSet.insert(*iterat2);
+		}
+	}
+}
+
 int getNumberOfFds(std::vector<HttpPortListener *> const & vector) {
 	int acc_size = 0;
 	for (std::vector<HttpPortListener *>::const_iterator it = vector.begin(); it !=  vector.end(); it++)
@@ -21,6 +33,30 @@ int getNumberOfFds(std::vector<HttpPortListener *> const & vector) {
 		acc_size += (*it)->getOpenFileDescriptors().size();
 	}
 	return (acc_size);
+}
+
+void freeMemory(std::vector<HttpPortListener *>  & portListenerVector)
+{
+	std::set<HttpServer *>  serverSet;
+	insertAllServers(serverSet, portListenerVector);
+	for (std::set<HttpServer *>::iterator serverIterator = serverSet.begin(); serverIterator != serverSet.end(); ++serverIterator)
+	{
+		std::vector<HttpLocation *> serverLocationVector = (*serverIterator)->getLocations();
+		for (std::vector<HttpLocation *>::iterator locationIterator = serverLocationVector.begin(); locationIterator != serverLocationVector.end(); ++locationIterator)
+		{
+			delete *locationIterator;
+		}
+		delete *serverIterator;
+	}
+	for (std::vector<HttpPortListener *>::iterator portListenerIterator = portListenerVector.begin(); portListenerIterator != portListenerVector.end(); ++portListenerIterator)
+	{
+		std::set<int> & openFileDescriptors = (*portListenerIterator)->getOpenFileDescriptors();
+		for (std::set<int>::iterator fd_it = openFileDescriptors.begin(); fd_it != openFileDescriptors.end(); fd_it++)
+		{
+			close(*fd_it);
+		}
+		delete *portListenerIterator;
+	}
 }
 
 struct pollfd* createPollStruct(nfds_t open_fds, std::vector<HttpPortListener *> &serverVector){
@@ -69,5 +105,6 @@ int main(int argc, char **argv)
 		}
 		delete [] polling_fds;
 	}
+	freeMemory(portListenerVector);
 	return (0);
 }

@@ -239,3 +239,13 @@ std::set<int> & HttpPortListener::getOpenFileDescriptors(void) {
 HttpPortListener::~HttpPortListener(){
 	
 }
+
+std::vector<HttpServer *> HttpPortListener::getServer()
+{
+	std::vector<HttpServer *> vector;
+	for(std::map<std::string,HttpServer *>::iterator iter = this->serverNamesToServer.begin(); iter != this->serverNamesToServer.end(); ++iter)
+	{
+		vector.push_back(iter->second);
+	}
+	return vector;
+}

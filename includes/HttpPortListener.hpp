@@ -38,6 +38,7 @@ class HttpPortListener
 		std::set<int> & getOpenFileDescriptors(void);
 		int getServerFd() const;
 		int getPort() const;
+		std::vector<HttpServer *> getServer();
 
 		void announce(std::ostream&) const;
 };
