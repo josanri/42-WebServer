@@ -14,6 +14,8 @@ Parser::Parser(std::string const & filePath): filePath(filePath) {
 Parser::~Parser () {
 }
 
+
+
 void Parser::parse(std::vector<HttpPortListener *> & listeners, std::map<int,HttpPortListener *> & fileDescriptoToPort) {
   this->readFile();
   std::map<int,std::vector<HttpServer *> > portToServer;
@@ -62,20 +64,14 @@ void Parser::parse(std::vector<HttpPortListener *> & listeners, std::map<int,Htt
     int port = portToServerIterator->first;
     std::vector<HttpServer *> servers = portToServerIterator->second;
     HttpPortListener *listener = new HttpPortListener(port, fileDescriptoToPort, servers);
+    listeners.push_back(listener);
     try {
       listener->initializeSocket();
     } catch (std::exception & e) {
       // TODO: Free memory
-      for (std::vector<HttpPortListener *>::iterator listenersIterator = listeners.begin();
-        listenersIterator != listeners.end();
-        listenersIterator++)
-      {
-        close((*listenersIterator)->getServerFd());
-        delete *listenersIterator;
-      }
+      freeMemory(listeners);
       throw std::runtime_error("Error while initializing sockets");
     }
-    listeners.push_back(listener);
   }
 }
 
