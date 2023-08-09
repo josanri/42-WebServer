@@ -24,8 +24,12 @@ void Parser::parse(std::vector<HttpPortListener *> & listeners, std::map<int,Htt
       for (std::map<int,std::vector<HttpServer *> >::iterator portToServerIterator = portToServer.begin(); portToServerIterator != portToServer.end(); portToServerIterator++) {
         std::vector<HttpServer *> servers = portToServerIterator->second;
         for (std::vector<HttpServer *>::iterator serversIterator = servers.begin(); serversIterator != servers.end(); serversIterator++) {
+          std::vector<HttpLocation *> serverLocationVector = (*serversIterator)->getLocations();
+          for (std::vector<HttpLocation *>::iterator locationIterator = serverLocationVector.begin(); locationIterator != serverLocationVector.end(); ++locationIterator)
+          {
+            delete *locationIterator;
+          }
           delete *serversIterator;
-          // TODO: locations should be free in server destructor
         }
       }
 
@@ -64,7 +68,8 @@ void Parser::parse(std::vector<HttpPortListener *> & listeners, std::map<int,Htt
       // TODO: Free memory
       for (std::vector<HttpPortListener *>::iterator listenersIterator = listeners.begin();
         listenersIterator != listeners.end();
-        listenersIterator++) {
+        listenersIterator++)
+      {
         close((*listenersIterator)->getServerFd());
         delete *listenersIterator;
       }
@@ -98,7 +103,6 @@ HttpLocation * Parser::extractLocation(std::string & serverChunk) {
   bool directoryListing = Extractor::b(locationChunk, "directory_listing");
 
   std::map<std::string, std::string> cgiFileExtensionMap = Extractor::m_str_str(locationChunk, "cgi");
-
   HttpLocation *location = new HttpLocation(root, route, methods, defaultFile, redirection, cgiFileExtensionMap, directoryListing, upload, maxBody);
 
   return location;
@@ -118,15 +122,21 @@ HttpServer * Parser::extractServer() {
 
   std::vector<HttpLocation *> locations;
   do {
-    HttpLocation *location = this->extractLocation(serverChunk);
-    if (!location) {
-      for (std::vector<HttpLocation *>::iterator locationsIterator = locations.begin(); locationsIterator != locations.end(); locationsIterator++) {
-        delete *locationsIterator;
+     try {
+        HttpLocation *location = this->extractLocation(serverChunk);
+        if (!location) {
+          throw std::runtime_error("Could not extract the location");
+        } else {
+          locations.push_back(location);
+        }
+      } catch (std::exception & e) {
+        std::cout << e.what() << std::endl;
+        for (std::vector<HttpLocation *>::iterator locationsIterator = locations.begin(); locationsIterator != locations.end(); locationsIterator++) {
+            delete *locationsIterator;
+          }
+        return (NULL);
       }
-      return NULL;
-    }
-
-    locations.push_back(location);
+  
   } while (!isEmpty(serverChunk));
 
   if (locations.size() == 0) {
