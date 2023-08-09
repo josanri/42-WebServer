@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iostream>
 #include "utils.h"
 
 bool isEmpty(std::string const & str) {
@@ -27,16 +28,14 @@ std::vector<std::string> split(std::string const & str, std::string delimiter) {
 
   size_t pos_1 = 0;
   size_t pos_2 = 0;
+
   while ((pos_2 = str.find(delimiter, pos_1)) != std::string::npos)
   {
       token = str.substr(pos_1, pos_2);
       result.push_back(token);
-      pos_1 = pos_2 + token.length();
+      pos_1 = pos_2 + delimiter.length();
   }
-  if (pos_1 == 0 && pos_2 == 0)
-  {
-    result.push_back(str);
-  }
+  result.push_back(str.substr(pos_1, pos_2));
   return result;
 }
 
